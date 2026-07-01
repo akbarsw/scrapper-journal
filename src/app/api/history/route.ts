@@ -1,20 +1,10 @@
-// In-memory history — replace with Supabase later
-interface HistoryEntry {
-  id: string;
-  vars: string;
-  total: number;
-  status: string;
-  created: string;
-}
-
-const history: HistoryEntry[] = [];
-const MAX = 50;
-
-export function addHistory(entry: HistoryEntry) {
-  history.unshift(entry);
-  if (history.length > MAX) history.pop();
-}
+import { getHistory } from "@/lib/supabase";
 
 export async function GET() {
-  return Response.json({ jobs: history });
+  try {
+    const history = await getHistory(10);
+    return Response.json({ jobs: history });
+  } catch (err: any) {
+    return Response.json({ jobs: [] });
+  }
 }

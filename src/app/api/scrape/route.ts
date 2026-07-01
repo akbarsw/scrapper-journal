@@ -1,11 +1,16 @@
 import { searchAll } from "@/sources/engine";
 import type { SearchParams } from "@/sources/engine";
-import { addHistory } from "@/app/api/history/route";
+import { saveHistory, getCached, setCache, makeCacheHash, checkRateLimit } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // Rate limit
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+    if (!checkRateLimit(ip, 20)) {
+      return Response.json({ error: "Rate limit: maksimal 20 pencarian per jam" }, { status: 429 });
+    }
 
+    const body = await request.json();
     const params: SearchParams = {
       vars: body.vars || "",
       yearFrom: body.yearFrom || body.year || undefined,
@@ -21,16 +26,37 @@ export async function POST(request: Request) {
       return Response.json({ error: "Variabel penelitian wajib diisi" }, { status: 400 });
     }
 
+    // Check cache
+    const cacheKey = makeCacheHash(params);
+    const cached = await getCached(cacheKey);
+    if (cached) {
+      return Response.json({ ...(cached as any), cached: true });
+    }
+
+    // Execute search
     const result = await searchAll(params);
 
-    // Save history
-    addHistory({
-      id: Math.random().toString(36).slice(2, 10),
-      vars: params.vars,
-      total: result.total,
-      status: "done",
-      created: new Date().toISOString(),
-    });
+    // Save to cache (60 min TTL)
+    await setCache(cacheKey, result, 60);
+
+    // Save history to Supabase
+    try {
+      await saveHistory({
+        vars: params.vars,
+        year_from: params.yearFrom,
+        year_to: params.yearTo,
+        min_cited: params.minCited,
+        lang: params.lang,
+        exclude: params.exclude,
+        scopus: params.scopus,
+        limit_count: params.limit,
+        total_results: result.total,
+        sources: result.sources,
+        time_ms: result.time,
+      });
+    } catch {
+      // Non-blocking — history save failure won't crash response
+    }
 
     return Response.json(result);
   } catch (err: any) {
