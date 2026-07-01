@@ -4,6 +4,7 @@ import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.openalex.org";
 const EMAIL = process.env.OPENALEX_EMAIL || "apakahbenar@ryznrouter.dev";
+const API_KEY = process.env.OPENALEX_API_KEY || "";
 
 export async function search(
   query: string,
@@ -27,6 +28,8 @@ export async function search(
       sort: "cited_by_count:desc",
       mailto: EMAIL,
     });
+    // Add API key if available to avoid rate limiting
+    if (API_KEY) params.set("api_key", API_KEY);
     if (filter.length) params.set("filter", filter.join(","));
 
     const res = await fetch(`${BASE}/works?${params}`, {
