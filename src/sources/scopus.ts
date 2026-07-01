@@ -32,7 +32,6 @@ export async function search(
       signal: controller.signal,
       headers: {
         "X-ELS-APIKey": API_KEY,
-        "X-ELS-ResourceVersion": "XOCS",
         Accept: "application/json",
       },
     });
