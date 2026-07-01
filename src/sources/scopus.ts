@@ -25,7 +25,6 @@ export async function search(
       query: scopusQuery,
       count: String(Math.min(limit, 25)),
       sort: "-citedby-count",
-      view: "COMPLETE",
     });
 
     const res = await fetch(`${BASE}?${params}`, {
