@@ -33,7 +33,7 @@ export default function ResultDisplay({ status, result, error, jobId }: Props) {
           </p>
         </div>
         <a
-          href={`http://104.211.102.145:8080/result_${jobId}.html`}
+          href={`https://scrap-api.ryznrouter.dev/result_${jobId}.html`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
