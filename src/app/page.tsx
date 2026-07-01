@@ -21,7 +21,7 @@ export default function Home() {
     setResult(null);
 
     try {
-      const res = await fetch("/api/scrape", {
+      const res = await fetch("https://scrap-api.ryznrouter.dev/api/scrape", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -41,7 +41,7 @@ export default function Home() {
   function pollJob(id: string) {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/status/${id}`);
+        const res = await fetch(`https://scrap-api.ryznrouter.dev/api/status/${id}`);
         const data = await res.json();
         if (data.status === "done") {
           setStatus("done");
