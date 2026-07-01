@@ -1,4 +1,4 @@
-const BACKEND = "http://104.211.102.145:8080";
+const BACKEND = "https://scrap-api.ryznrouter.dev";
 
 export async function POST(request: Request) {
   try {
@@ -9,9 +9,12 @@ export async function POST(request: Request) {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    return Response.json(data, { status: res.status });
+    // Add CORS headers
+    return new Response(JSON.stringify(data), {
+      status: res.status,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 502 });
   }
 }
-

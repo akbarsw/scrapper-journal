@@ -1,4 +1,4 @@
-const BACKEND = "http://104.211.102.145:8080";
+const BACKEND = "https://scrap-api.ryznrouter.dev";
 
 export async function GET(
   _request: Request,
@@ -8,7 +8,10 @@ export async function GET(
     const { jobId } = await params;
     const res = await fetch(`${BACKEND}/api/status/${jobId}`);
     const data = await res.json();
-    return Response.json(data, { status: res.status });
+    return new Response(JSON.stringify(data), {
+      status: res.status,
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 502 });
   }
