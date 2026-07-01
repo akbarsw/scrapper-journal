@@ -105,3 +105,4 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     time: Date.now() - start,
   };
 }
+
