@@ -22,7 +22,7 @@ export async function search(
     if (yearTo) scopusQuery += ` AND PUBYEAR < ${yearTo + 1}`;
 
     // Build URL manually — URLSearchParams encoding breaks Scopus auth
-    const encodedQuery = encodeURIComponent(scopusQuery);
+    const encodedQuery = encodeURIComponent(scopusQuery.replace(/\+/g, '%20'));
     const url = `${BASE}?query=${encodedQuery}&count=${Math.min(limit, 25)}&sort=-citedby-count`;
 
     const res = await fetch(url, {
