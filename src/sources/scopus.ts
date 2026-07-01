@@ -1,5 +1,5 @@
 // Scopus API — requires institutional API key
-// https://dev.elsevier.com/documentation/ScopusSearchAPI.wadl
+// https://dev.elsevier.com/documentation/ScopusSearchAPI.wjadl
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.elsevier.com/content/search/scopus";
@@ -17,13 +17,12 @@ export async function search(
 
   try {
     // Build Scopus query syntax
-    let scopusQuery = `TITLE-ABS-KEY(${query.replace(/[^a-zA-Z0-9\s_]/g, " ").split(",").map(s => `"${s.trim()}"`).join(" OR ")})`;
+    let scopusQuery = query.split(",").map(s => `TITLE-ABS-KEY("${s.trim()}")`).join(" OR ");
     if (yearFrom) scopusQuery += ` AND PUBYEAR > ${yearFrom - 1}`;
     if (yearTo) scopusQuery += ` AND PUBYEAR < ${yearTo + 1}`;
 
-    // Build URL manually — URLSearchParams encoding breaks Scopus auth
-    const encodedQuery = encodeURIComponent(scopusQuery.replace(/\+/g, '%20'));
-    const url = `${BASE}?query=${encodedQuery}&count=${Math.min(limit, 25)}&sort=-citedby-count`;
+    // Manual URL build — URLSearchParams causes 401 on Vercel
+    const url = `${BASE}?query=${encodeURIComponent(scopusQuery)}&count=${Math.min(limit, 25)}&sort=-citedby-count`;
 
     const res = await fetch(url, {
       signal: controller.signal,
@@ -34,9 +33,9 @@ export async function search(
     });
 
     if (!res.ok) {
-      // Scopus often returns 4xx for query errors, don't crash the whole request
       if (res.status === 429) throw new Error("Scopus rate limited");
-      throw new Error(`Scopus ${res.status}`);
+      const body = await res.text().catch(() => "");
+      throw new Error(`Scopus ${res.status}: ${body.slice(0, 60)}`);
     }
 
     const data = await res.json();
@@ -75,4 +74,3 @@ export async function search(
     clearTimeout(timeout);
   }
 }
-
