@@ -1,54 +1,92 @@
 "use client";
 
 interface Props {
-  status: "idle" | "pending" | "running" | "done" | "failed";
-  result: any;
-  error: string | null;
-  jobId: string | null;
+  data: {
+    papers: any[];
+    total: number;
+    sources: { name: string; count: number; error?: string }[];
+    time: number;
+  };
 }
 
-export default function ResultDisplay({ status, result, error, jobId }: Props) {
-  if (status !== "done" && status !== "failed") return null;
-
-  if (status === "failed") {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-        <p className="text-red-600 font-medium text-lg">❌ Gagal</p>
-        <p className="text-red-500 text-sm mt-1">{error || "Unknown error"}</p>
-      </div>
-    );
-  }
-
-  const count = result?.count || 0;
+export default function ResultDisplay({ data }: Props) {
+  if (!data) return null;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6 space-y-4">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-green-700 font-semibold text-lg flex items-center gap-2">
-            ✅ Selesai!
-          </h3>
-          <p className="text-zinc-600 text-sm mt-1">
-            Ditemukan <strong>{count}</strong> artikel
-          </p>
+    <div className="space-y-4">
+      {/* Summary */}
+      <div className="bg-white rounded-xl shadow-sm border border-green-200 p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-green-700 font-semibold text-lg flex items-center gap-2">
+              ✅ Ditemukan {data.total} artikel
+            </h3>
+            <p className="text-zinc-500 text-sm mt-1">{data.time / 1000}s — {data.papers.length} ditampilkan</p>
+          </div>
         </div>
-        <a
-          href={`https://scrap-api.ryznrouter.dev/result_${jobId}.html`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
-        >
-          📄 Lihat Hasil
-        </a>
+        {/* Source badges */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {data.sources.map((s) => (
+            <span
+              key={s.name}
+              className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                s.error
+                  ? "bg-red-100 text-red-600"
+                  : s.count > 0
+                  ? "bg-green-100 text-green-700"
+                  : "bg-zinc-100 text-zinc-500"
+              }`}
+            >
+              {s.name} {s.error ? "✗" : `${s.count}✓`}
+            </span>
+          ))}
+        </div>
       </div>
-      <div className="flex flex-wrap gap-2 text-xs">
-        <span className="bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">OpenAlex ✓</span>
-        <span className="bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">Semantic Scholar ✓</span>
-        <span className="bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">Scopus ✓</span>
-        <span className="bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">Crossref ✓</span>
-        <span className="bg-yellow-100 text-yellow-700 px-2.5 py-0.5 rounded-full">Filtered ✓</span>
+
+      {/* Paper list */}
+      <div className="space-y-3">
+        {data.papers.map((p: any, i: number) => (
+          <div key={p.doi || i} className="bg-white rounded-xl shadow-sm border p-5 space-y-2">
+            <div className="flex items-start justify-between gap-4">
+              <h4 className="font-semibold text-zinc-900 leading-snug">{p.title}</h4>
+              <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded ${
+                p.source === "OpenAlex" ? "bg-blue-100 text-blue-700" :
+                p.source === "SemanticScholar" ? "bg-purple-100 text-purple-700" :
+                p.source === "Scopus" ? "bg-orange-100 text-orange-700" :
+                "bg-zinc-100 text-zinc-700"
+              }`}>
+                {p.source}
+              </span>
+            </div>
+            <p className="text-sm text-zinc-500">
+              {p.authors.slice(0, 3).join(", ")}{p.authors.length > 3 ? " et al." : ""}
+            </p>
+            <div className="flex items-center gap-3 text-xs text-zinc-400">
+              <span>📅 {p.year}</span>
+              <span>📖 {p.journal || "N/A"}</span>
+              <span>💬 {p.cited} sitasi</span>
+            </div>
+            <div className="flex items-center gap-3">
+              {p.doi && (
+                <a
+                  href={`https://doi.org/${p.doi}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  DOI ↗
+                </a>
+              )}
+              {p.abstract && p.abstract !== "Abstract available" && (
+                <details className="text-xs text-zinc-500">
+                  <summary className="cursor-pointer hover:text-zinc-700">Abstrak</summary>
+                  <p className="mt-2 text-zinc-600 leading-relaxed">{p.abstract}</p>
+                </details>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-      <p className="text-xs text-zinc-400">Job ID: {jobId}</p>
     </div>
   );
 }

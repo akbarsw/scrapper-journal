@@ -1,44 +1,42 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 export default function History({ refreshKey }: { refreshKey: number }) {
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/history")
+      .then((r) => r.json())
+      .then((d) => setHistory(d.jobs || []))
+      .catch(() => {});
+  }, [refreshKey]);
+
+  if (history.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-lg font-semibold mb-4">📋 Riwayat Pencarian</h2>
+        <p className="text-sm text-zinc-400">Belum ada riwayat. Mulai scraping untuk melihat hasil.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">📋 Riwayat Pencarian</h2>
-        <button
-          onClick={fetchHistory}
-          className="text-sm text-blue-600 hover:underline"
-        >
-          Refresh
-        </button>
-      </div>
-      <div id="history-list">
-        <p className="text-sm text-zinc-400">Belum ada riwayat. Mulai scraping untuk melihat hasil.</p>
+      <h2 className="text-lg font-semibold mb-4">📋 Riwayat Pencarian</h2>
+      <div className="space-y-0 divide-y">
+        {history.map((j: any) => (
+          <div key={j.id} className="flex items-center justify-between py-2 text-sm">
+            <span className="text-zinc-500">{j.created?.slice(0, 16) || "?"}</span>
+            <span className={
+              j.status === "done" ? "text-green-600" : 
+              j.status === "failed" ? "text-red-500" : 
+              "text-zinc-400"
+            }>{j.status}</span>
+            <span className="text-zinc-400 font-mono text-xs">{j.id?.slice(0, 8)}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
-}
-
-async function fetchHistory() {
-  const el = document.getElementById("history-list");
-  if (!el) return;
-  try {
-    const res = await fetch("http://104.211.102.145:8080/api/history");
-    const data = await res.json();
-    const jobs = data.jobs || [];
-    if (jobs.length === 0) {
-      el.innerHTML = '<p class="text-sm text-zinc-400">Belum ada riwayat.</p>';
-      return;
-    }
-    el.innerHTML = jobs
-      .map(
-        (j: any) =>
-          `<div class="flex items-center justify-between py-2 border-b text-sm last:border-0">
-            <span class="text-zinc-700">${j.created?.slice(0, 16) || "?"}</span>
-            <span class="${j.status === "done" ? "text-green-600" : j.status === "failed" ? "text-red-500" : "text-zinc-400"}">${j.status}</span>
-            <span class="text-zinc-400 font-mono text-xs">${j.id?.slice(0, 8)}</span>
-          </div>`
-      )
-      .join("");
-  } catch {
-    el.innerHTML = '<p class="text-sm text-red-500">Gagal load riwayat</p>';
-  }
 }

@@ -20,13 +20,12 @@ export default function ScrapeForm({ onSubmit, disabled }: Props) {
     if (!vars.trim()) return;
     onSubmit({
       vars: vars.trim(),
-      year,
-      min_cited: minCited,
+      yearFrom: year,
       limit,
       lang,
       exclude: exclude.trim() || null,
+      minCited,
       scopus: true,
-      enrich: true,
     });
   }
 
