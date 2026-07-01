@@ -3,7 +3,7 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.elsevier.com/content/search/scopus";
-const API_KEY = "1295a56fe8f7348015503dd1fb9b1d75";
+const API_KEY = process.env.SCOPUS_API_KEY || "1295a56fe8f7348015503dd1fb9b1d75";
 
 export async function search(
   query: string,

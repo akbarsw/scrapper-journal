@@ -3,7 +3,7 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.openalex.org";
-const EMAIL = "apakahbenar@ryznrouter.dev";
+const EMAIL = process.env.OPENALEX_EMAIL || "apakahbenar@ryznrouter.dev";
 
 export async function search(
   query: string,

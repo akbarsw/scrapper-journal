@@ -3,7 +3,7 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.crossref.org/works";
-const MAILTO = "apakahbenar@ryznrouter.dev";
+const MAILTO = process.env.CROSSREF_EMAIL || "apakahbenar@ryznrouter.dev";
 
 export async function search(
   query: string,

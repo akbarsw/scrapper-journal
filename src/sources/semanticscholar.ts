@@ -3,8 +3,7 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.semanticscholar.org/graph/v1";
-// Using previously saved key from memory
-const API_KEY = "s2k-nqPqRr9lJPQ94mUYriqGaiFKIVw3yDFF5JL8YyJj";
+const API_KEY = process.env.S2_API_KEY || "s2k-nqPqRr9lJPQ94mUYriqGaiFKIVw3yDFF5JL8YyJj";
 
 export async function search(
   query: string,
