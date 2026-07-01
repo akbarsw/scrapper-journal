@@ -21,13 +21,11 @@ export async function search(
     if (yearFrom) scopusQuery += ` AND PUBYEAR > ${yearFrom - 1}`;
     if (yearTo) scopusQuery += ` AND PUBYEAR < ${yearTo + 1}`;
 
-    const params = new URLSearchParams({
-      query: scopusQuery,
-      count: String(Math.min(limit, 25)),
-      sort: "-citedby-count",
-    });
+    // Build URL manually — URLSearchParams encoding breaks Scopus auth
+    const encodedQuery = encodeURIComponent(scopusQuery);
+    const url = `${BASE}?query=${encodedQuery}&count=${Math.min(limit, 25)}&sort=-citedby-count`;
 
-    const res = await fetch(`${BASE}?${params}`, {
+    const res = await fetch(url, {
       signal: controller.signal,
       headers: {
         "X-ELS-APIKey": API_KEY,
@@ -77,3 +75,4 @@ export async function search(
     clearTimeout(timeout);
   }
 }
+
