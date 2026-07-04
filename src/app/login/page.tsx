@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { LogIn } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient"; // Sesuaikan sama instance supabase-mu nanti kalau error import
+import { supabase } from "@/lib/supabaseClient";
 
 const SignInGoogleOnly = () => {
   const [loading, setLoading] = React.useState(false);
@@ -13,7 +12,7 @@ const SignInGoogleOnly = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`, // Nanti butuh config callback kalau beneran dipake
+          redirectTo: `${window.location.origin}/auth/callback`, 
         }
       });
       if (error) throw error;
@@ -29,7 +28,9 @@ const SignInGoogleOnly = () => {
       <div className="w-full max-w-sm bg-gradient-to-b from-sky-50/50 to-white rounded-3xl shadow-xl shadow-gray-200/50 p-8 flex flex-col items-center border border-blue-100 text-black">
         
         <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white mb-6 shadow-lg shadow-opacity-5">
-          <LogIn className="w-7 h-7 text-blue-600" />
+          <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
         </div>
         
         <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
