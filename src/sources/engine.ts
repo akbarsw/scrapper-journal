@@ -153,20 +153,28 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // Apply filters and score
   papers = applyFiltersAndScore(papers, params, query);
 
-  // HARD FILTER BAHASA (Berdasarkan jumlah kata Indonesia vs Inggris di Judul & Abstrak)
+  // 1. HARD FILTER BAHASA (Lebih Cerdas & Aman)
+  // Alih-alih nebak kata "and" atau "dan", kita deteksi secara lunak.
+  // Jika abstrak terlalu pendek/kosong, kita tetap loloskan (daripada membunuh paper Indonesia yang tak ber-abstrak).
   if (params.lang === "id") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
-       const englishWords = (text.match(/\b(the|of|and|in|to|a|is|for|on|with|as|by|an)\b/g) || []).length;
-       const indoWords = (text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g) || []).length;
-       return indoWords > englishWords; // Harus dominan Indo
+       const isObviousEnglish = text.match(/\b(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)\b/g);
+       const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)\b/g);
+       
+       // Kalau gak ada tanda bahasa asing sama sekali, biarkan lewat
+       if (!isObviousEnglish) return true;
+       // Kalau kosa kata indonya lebih banyak atau setara, biarkan lewat
+       if (isObviousIndo && isObviousIndo.length >= isObviousEnglish.length) return true;
+       // Sisanya (inggris tulen tanpa kata indo) buang
+       return false;
     });
   } else if (params.lang === "en") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
-       const englishWords = (text.match(/\b(the|of|and|in|to|a|is|for|on|with|as|by|an)\b/g) || []).length;
-       const indoWords = (text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g) || []).length;
-       return englishWords >= indoWords; // Harus dominan Inggris
+       const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g);
+       if (!isObviousIndo) return true;
+       return false; // Kalau ada kata hubung indo, buang
     });
   }
 
