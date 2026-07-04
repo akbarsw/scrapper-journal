@@ -108,6 +108,7 @@ export interface SearchResult {
   total: number;
   sources: { name: string; count: number; error?: string }[];
   time: number;
+  llmQuery?: string;
 }
 
 export async function searchAll(params: SearchParams): Promise<SearchResult> {
