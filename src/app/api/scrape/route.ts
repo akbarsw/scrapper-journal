@@ -42,7 +42,8 @@ export async function POST(request: Request) {
     // Save history to Supabase
     try {
       await saveHistory({
-        vars: params.vars,
+        query: params.vars,
+        llm_query: (result as any).llmQuery || "",
         year_from: params.yearFrom,
         year_to: params.yearTo,
         min_cited: params.minCited,

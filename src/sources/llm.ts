@@ -8,8 +8,9 @@ export async function generateKeywords(query: string): Promise<string> {
     return query;
   }
 
-  const payload = {
+    const payload = {
     model: "ag/gemini-3.1-pro-low",
+    stream: false,
     messages: [
       {
         role: "system",
@@ -30,13 +31,13 @@ Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR 
         content: query
       }
     ],
-    max_tokens: 50,
+    max_tokens: 200,
     temperature: 0.1
   };
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000); // 4 detik maksimal nunggu LLM
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8 detik maksimal nunggu LLM mikir
 
     const res = await fetch(routerUrl, {
       method: "POST",
@@ -51,9 +52,26 @@ Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR 
     clearTimeout(timeout);
 
     if (res.ok) {
-      const data = await res.json();
-      const llmResult = data.choices?.[0]?.message?.content?.trim();
-      if (llmResult) return llmResult;
+      // 9router kadang me-return streaming chunk meskipun stream: false. Kita handle manual parsingnya.
+      const text = await res.text();
+      let llmResult = "";
+      
+      try {
+        const data = JSON.parse(text);
+        llmResult = data.choices?.[0]?.message?.content?.trim();
+      } catch (err) {
+         // Kalo masih membandel keluarin format "data: {...}" (streaming SSE)
+         const chunks = text.split('\n').filter(l => l.startsWith('data: ') && !l.includes('[DONE]'));
+         for (const chunk of chunks) {
+            try {
+               const parsed = JSON.parse(chunk.replace('data: ', ''));
+               const token = parsed.choices?.[0]?.delta?.content || "";
+               llmResult += token;
+            } catch (e) {}
+         }
+      }
+      
+      if (llmResult) return llmResult.replace(/\n/g, '').trim();
     } else {
       console.error(`LLM Error: ${res.status}`);
     }
