@@ -27,14 +27,14 @@ function dedup(papers: Paper[]): Paper[] {
   });
 }
 
-function applyFilters(papers: Paper[], params: SearchParams): Paper[] {
+function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuery: string): Paper[] {
   let filtered = [...papers];
 
   // Language filter (simple heuristic)
   if (params.lang && params.lang !== "both") {
     const idChars = /[^a-zA-Z0-9\s.,;:!?()\-"'\[\]]/;
     filtered = filtered.filter((p) => {
-      if (!p.abstract) return true; // keep if no abstract to check
+      if (!p.abstract) return true;
       const hasIndo = idChars.test(p.abstract) || /\b(di|dan|yang|dari|dengan|pada|untuk|dalam|adalah|ini|itu)\b/i.test(p.abstract);
       return params.lang === "id" ? hasIndo : !hasIndo;
     });
@@ -48,6 +48,59 @@ function applyFilters(papers: Paper[], params: SearchParams): Paper[] {
       return !excludes.some((ex) => text.includes(ex));
     });
   }
+
+  // Extract core keywords from the boolean query for relevance scoring
+  // E.g., '"supply chain" AND "coffee"' -> ['supply chain', 'coffee']
+  const queryTerms = booleanQuery
+    .replace(/ AND /g, ',')
+    .replace(/ OR /g, ',')
+    .replace(/["()]/g, '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(s => s.length > 2);
+
+  // Score each paper
+  filtered.forEach(p => {
+    let score = 0;
+    const title = (p.title || "").toLowerCase();
+    const abstract = (p.abstract || "").toLowerCase();
+
+    // 1. Topic Relevance (Heaviest Weight)
+    let matchCount = 0;
+    for (const term of queryTerms) {
+      if (title.includes(term)) {
+        score += 15; // Sangat relevan jika ada di Judul
+        matchCount++;
+      } else if (abstract.includes(term)) {
+        score += 5;  // Cukup relevan jika ada di Abstrak
+        matchCount++;
+      }
+    }
+
+    // Jika paper TIDAK mengandung satupun variabel inti yang dicari, penalti keras.
+    if (matchCount === 0 && queryTerms.length > 0) {
+      score -= 50; 
+    }
+
+    // 2. Citation Impact (Logarithmic Weight)
+    // 10 cit = +2 pts | 100 cit = +4 pts | 1000 cit = +6 pts
+    // Citations are important but won't outrank a highly relevant 0-citation new paper
+    if (p.cited > 0) {
+      score += Math.log10(p.cited + 1) * 2;
+    }
+
+    // 3. Recency Bonus
+    if (p.year) {
+      const currentYear = new Date().getFullYear();
+      if (p.year === currentYear || p.year === currentYear - 1) score += 3;
+      else if (p.year < currentYear - 10) score -= 2; // Old paper penalty
+    }
+
+    (p as any)._relevanceScore = score;
+  });
+
+  // Filter out complete garbage (score < -10)
+  filtered = filtered.filter(p => (p as any)._relevanceScore > -10);
 
   return filtered;
 }
@@ -92,11 +145,16 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // Dedup
   let papers = dedup(allPapers);
 
-  // Apply filters
-  papers = applyFilters(papers, params);
+  // Apply filters and score
+  papers = applyFiltersAndScore(papers, params, query);
 
-  // Sort by cited count desc
-  papers.sort((a, b) => b.cited - a.cited);
+  // Sort by RELEVANCE SCORE first, then by citation count
+  papers.sort((a, b) => {
+    const scoreA = (a as any)._relevanceScore || 0;
+    const scoreB = (b as any)._relevanceScore || 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    return b.cited - a.cited;
+  });
 
   // Limit
   papers = papers.slice(0, params.limit);
