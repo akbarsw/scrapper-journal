@@ -77,10 +77,8 @@ function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuer
       }
     }
 
-    // Jika paper TIDAK mengandung satupun variabel inti yang dicari, penalti keras.
-    if (matchCount === 0 && queryTerms.length > 0) {
-      score -= 50; 
-    }
+    // HAPUS PENALTI -50
+    // Biarkan matchCount === 0 skornya tetap 0 (tidak dihukum mati, hanya tenggelam ke bawah)
 
     // 2. Citation Impact (Logarithmic Weight)
     // 10 cit = +2 pts | 100 cit = +4 pts | 1000 cit = +6 pts
@@ -99,8 +97,8 @@ function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuer
     (p as any)._relevanceScore = score;
   });
 
-  // Filter out complete garbage (score < -10)
-  filtered = filtered.filter(p => (p as any)._relevanceScore > -10);
+  // JANGAN FILTER OUT. Cuma ngurutin aja. Yang relevansinya jelek taruh bawah.
+  // filtered = filtered.filter(p => (p as any)._relevanceScore > -10);
 
   return filtered;
 }
