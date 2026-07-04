@@ -4,6 +4,7 @@ import { search as openalex } from "./openalex";
 import { search as semanticscholar } from "./semanticscholar";
 import { search as crossref } from "./crossref";
 import { search as scopus } from "./scopus";
+import { generateKeywords } from "./llm";
 
 export interface SearchParams {
   vars: string;
@@ -60,13 +61,9 @@ export interface SearchResult {
 
 export async function searchAll(params: SearchParams): Promise<SearchResult> {
   const start = Date.now();
-  // Bersihin stop-words Bahasa Indonesia kaya di script Python
-  const cleanedQuery = params.vars
-    .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam)(?=\s|$)/gi, " ")
-    .replace(/[,_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const query = cleanedQuery;
+  
+  // Tembak LLM 9Router buat dapet Boolean query (Atau fallback regex kalo gagal)
+  const query = await generateKeywords(params.vars);
 
   // Panggil paralel
   const sources: Promise<SourceResult>[] = [
