@@ -17,10 +17,32 @@ export interface SearchParams {
   scopus?: boolean;
 }
 
+function normalizeDoi(doi: string): string {
+  return doi
+    .toLowerCase()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//, '')
+    .replace(/^doi:\s*/, '')
+    .trim();
+}
+
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFKD') // pecah diacritics
+    .replace(/[\u0300-\u036f]/g, '') // hapus diacritics
+    .replace(/&amp;/g, 'and')
+    .replace(/[^\w\s]/g, '') // buang semua punctuation, bukan cuma slice
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function dedup(papers: Paper[]): Paper[] {
   const seen = new Set<string>();
   return papers.filter((p) => {
-    const key = p.doi || p.title.toLowerCase().trim().slice(0, 80);
+    const key = p.doi
+      ? `doi:${normalizeDoi(p.doi)}`
+      : `title:${normalizeTitle(p.title)}`; // full title, no slice
+    
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
