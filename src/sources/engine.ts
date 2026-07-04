@@ -60,7 +60,13 @@ export interface SearchResult {
 
 export async function searchAll(params: SearchParams): Promise<SearchResult> {
   const start = Date.now();
-  const query = params.vars.replace(/[,_]+/g, " ").trim();
+  // Bersihin stop-words Bahasa Indonesia kaya di script Python
+  const cleanedQuery = params.vars
+    .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam)(?=\s|$)/gi, " ")
+    .replace(/[,_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const query = cleanedQuery;
 
   // Panggil paralel
   const sources: Promise<SourceResult>[] = [
