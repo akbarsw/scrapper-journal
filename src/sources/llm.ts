@@ -68,13 +68,24 @@ Example output: supply chain performance, coffee`
       }
       
       llmResult = llmResult.replace(/\n/g, '').replace(/["()]/g, '').trim();
-      if (llmResult && llmResult.includes(',')) {
-         // Rakit jadi Boolean format: "term1" AND "term2"
-         const terms = llmResult.split(',').map(t => t.trim()).filter(t => t);
-         const booleanQuery = terms.map(t => `"${t}"`).join(' AND ');
-         return booleanQuery;
+      
+      // Jika LLM keputus (cuma 1 kata, atau panjang karakter terlalu pendek untuk sebuah penelitian)
+      if (!llmResult || llmResult.length < 5 || (llmResult.split(',').length < 2 && llmResult.length < 15)) {
+        throw new Error("LLM balikin data kepotong/cacat");
       }
-      if (llmResult) return llmResult;
+
+      if (llmResult && llmResult.includes(',')) {
+         const terms = llmResult.split(',').map(t => t.trim()).filter(t => t);
+         // Kita rakit Boolean.
+         // Tapi TUNGGU! Kita harus nyelipin keyword Bahasa Indonesia aslinya biar jurnal lokal tetep dapet.
+         const cleanIdQuery = query.replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi)(?=\s|$)/gi, " ").replace(/\s+/g, " ").trim();
+         
+         const booleanQuery = terms.map(t => `"${t}"`).join(' AND ');
+         
+         // Format Akhir: (Inggris AND Inggris) OR (Indonesia)
+         return `(${booleanQuery}) OR ("${cleanIdQuery}")`;
+      }
+      if (llmResult) return `("${llmResult}") OR ("${query}")`;
     } else {
       console.error(`LLM Error: ${res.status}`);
     }
@@ -82,9 +93,9 @@ Example output: supply chain performance, coffee`
     console.error("LLM Timeout or Error:", e);
   }
 
-  // Fallback
+  // Fallback Murni (Pake Judul Indo aslinya aja)
   const cleanedQuery = query
-    .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi)(?=\s|$)/gi, " ")
+    .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi|kabupaten|kota|provinsi)(?=\s|$)/gi, " ")
     .replace(/[,_]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
