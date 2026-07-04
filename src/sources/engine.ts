@@ -134,27 +134,36 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // Tembak LLM 9Router buat dapet Intent JSON
   const intent = await generateKeywords(params.vars);
   
-  // Kueri yang dilempar ke API eksternal harus String, bukan JSON
-  // Kita gabungin Inggris OR Indo biar jangkauan tangkapan (Recall) luas
-  const apiQueryString = intent.query_english 
-    ? `(${intent.query_english}) OR ("${intent.query_indo}")`
-    : `"${intent.query_indo}"`;
+  // Double Shoot Strategy (Daripada OR yang bikin API ngaco, tembak 2x terpisah lalu merge)
+  const apiQueryEn = intent.query_english.replace(/"/g, "").replace(/ AND /g, " ");
+  const apiQueryId = intent.query_indo.replace(/"/g, "").replace(/ AND /g, " ");
 
-  // Panggil paralel
-  const sources: Promise<SourceResult>[] = [
-    openalex(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit),
-    semanticscholar(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit),
-    crossref(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit),
-  ];
-  if (params.scopus) {
-    sources.push(scopus(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit));
+  const sources: Promise<SourceResult>[] = [];
+  
+  // Tembak Inggris
+  if (apiQueryEn.length > 3) {
+    sources.push(openalex(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    sources.push(semanticscholar(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+  }
+  
+  // Tembak Indo
+  if (apiQueryId.length > 3) {
+    sources.push(openalex(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    sources.push(semanticscholar(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
   }
 
   const results = await Promise.allSettled(sources);
   const sourceMeta: { name: string; count: number; error?: string }[] = [];
   const allPapers: Paper[] = [];
 
-  const sourceNames = ["OpenAlex", "SemanticScholar", "Crossref", ...(params.scopus ? ["Scopus"] : [])];
+  const sourceNames: string[] = [];
+  if (apiQueryEn.length > 3) {
+    sourceNames.push("OpenAlex (En)", "SemanticScholar (En)");
+  }
+  if (apiQueryId.length > 3) {
+    sourceNames.push("OpenAlex (Id)", "SemanticScholar (Id)");
+  }
+
   results.forEach((r, i) => {
     if (r.status === "fulfilled") {
       allPapers.push(...r.value.papers);
@@ -206,7 +215,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     total: papers.length,
     sources: sourceMeta,
     time: Date.now() - start,
-    llmQuery: apiQueryString,
+    llmQuery: `${apiQueryEn} | ${apiQueryId}`,
   };
 }
 
