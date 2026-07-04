@@ -14,30 +14,28 @@ export async function generateKeywords(query: string): Promise<string> {
     messages: [
       {
         role: "system",
-        content: `You are an academic research assistant translating Indonesian thesis variables into optimal Boolean search queries for academic databases like Scopus and OpenAlex.
-Task: Given a research topic or variables in Indonesian, return a concise boolean query containing English synonyms and the core Indonesian terms.
+        content: `You are an academic keyword extractor.
+Task: Given a research topic in Indonesian, extract the 2-3 most important core variables and translate them to English.
 Rules:
-1. Remove filler words (pengaruh, analisis, terhadap, studi kasus, di, dll).
-2. Translate the core concepts to English.
-3. Keep the Indonesian core concept as an OR condition if it's uniquely local.
-4. Output ONLY the boolean query, nothing else. No markdown, no explanations.
-Example input: analisis faktor-faktor yang mempengaruhi volume penjualan susu sapi perah di kud mojosongo
-Example output: ("sales volume" OR "revenue") AND ("dairy cow" OR "milk production" OR "susu sapi perah")
+1. Output ONLY a comma-separated list of English terms. No explanations, no boolean operators (like AND/OR), no brackets.
+2. Remove filler words (pengaruh, analisis, terhadap).
+Example input: analisis faktor-faktor yang mempengaruhi volume penjualan susu sapi perah
+Example output: sales volume, dairy cow
 Example input: Kinerja rantai pasok kopi
-Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR "kopi")`
+Example output: supply chain performance, coffee`
       },
       {
         role: "user",
         content: query
       }
     ],
-    max_tokens: 200,
+    max_tokens: 150,
     temperature: 0.1
   };
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000); // 8 detik maksimal nunggu LLM mikir
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const res = await fetch(routerUrl, {
       method: "POST",
@@ -52,7 +50,6 @@ Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR 
     clearTimeout(timeout);
 
     if (res.ok) {
-      // 9router kadang me-return streaming chunk meskipun stream: false. Kita handle manual parsingnya.
       const text = await res.text();
       let llmResult = "";
       
@@ -60,7 +57,6 @@ Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR 
         const data = JSON.parse(text);
         llmResult = data.choices?.[0]?.message?.content?.trim();
       } catch (err) {
-         // Kalo masih membandel keluarin format "data: {...}" (streaming SSE)
          const chunks = text.split('\n').filter(l => l.startsWith('data: ') && !l.includes('[DONE]'));
          for (const chunk of chunks) {
             try {
@@ -71,7 +67,14 @@ Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR 
          }
       }
       
-      if (llmResult) return llmResult.replace(/\n/g, '').trim();
+      llmResult = llmResult.replace(/\n/g, '').replace(/["()]/g, '').trim();
+      if (llmResult && llmResult.includes(',')) {
+         // Rakit jadi Boolean format: "term1" AND "term2"
+         const terms = llmResult.split(',').map(t => t.trim()).filter(t => t);
+         const booleanQuery = terms.map(t => `"${t}"`).join(' AND ');
+         return booleanQuery;
+      }
+      if (llmResult) return llmResult;
     } else {
       console.error(`LLM Error: ${res.status}`);
     }
@@ -79,7 +82,7 @@ Example output: ("supply chain performance" OR "supply chain") AND ("coffee" OR 
     console.error("LLM Timeout or Error:", e);
   }
 
-  // Fallback ke query asli yang dibersihkan stop-words nya jika LLM gagal
+  // Fallback
   const cleanedQuery = query
     .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi)(?=\s|$)/gi, " ")
     .replace(/[,_]+/g, " ")
