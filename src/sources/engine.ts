@@ -147,6 +147,23 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // Apply filters and score
   papers = applyFiltersAndScore(papers, params, query);
 
+  // HARD FILTER BAHASA (Berdasarkan jumlah kata Indonesia vs Inggris di Judul & Abstrak)
+  if (params.lang === "id") {
+    papers = papers.filter(p => {
+       const text = (p.title + " " + (p.abstract || "")).toLowerCase();
+       const englishWords = (text.match(/\b(the|of|and|in|to|a|is|for|on|with|as|by|an)\b/g) || []).length;
+       const indoWords = (text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g) || []).length;
+       return indoWords > englishWords; // Harus dominan Indo
+    });
+  } else if (params.lang === "en") {
+    papers = papers.filter(p => {
+       const text = (p.title + " " + (p.abstract || "")).toLowerCase();
+       const englishWords = (text.match(/\b(the|of|and|in|to|a|is|for|on|with|as|by|an)\b/g) || []).length;
+       const indoWords = (text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g) || []).length;
+       return englishWords >= indoWords; // Harus dominan Inggris
+    });
+  }
+
   // Sort by RELEVANCE SCORE first, then by citation count
   papers.sort((a, b) => {
     const scoreA = (a as any)._relevanceScore || 0;
