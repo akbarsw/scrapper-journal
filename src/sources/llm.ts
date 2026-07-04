@@ -1,28 +1,44 @@
-export async function generateKeywords(query: string): Promise<string> {
+export interface ExtractedIntent {
+  query_english: string;
+  query_indo: string;
+  core_concepts: string[];
+}
+
+export async function generateKeywords(query: string): Promise<ExtractedIntent> {
   const routerUrl = "https://api.ryznrouter.dev/v1/chat/completions";
   const apiKey = process.env.ROUTER_API_KEY;
 
-  // Jika API key tidak ada, kembalikan query asli
+  // Fallback function kalo LLM mati/limit
+  const createFallback = (): ExtractedIntent => {
+    const cleanIdQuery = query
+      .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi|kabupaten|kota|provinsi)(?=\s|$)/gi, " ")
+      .replace(/[,_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    
+    return {
+      query_english: "",
+      query_indo: cleanIdQuery,
+      core_concepts: cleanIdQuery.split(" ").filter(w => w.length > 2)
+    };
+  };
+
   if (!apiKey) {
-    console.warn("ROUTER_API_KEY is not set. Using original query.");
-    return query;
+    console.warn("ROUTER_API_KEY is not set. Using fallback.");
+    return createFallback();
   }
 
-    const payload = {
+  const payload = {
     model: "ag/gemini-3.1-pro-low",
     stream: false,
     messages: [
       {
         role: "system",
-        content: `You are an academic keyword extractor.
-Task: Given a research topic in Indonesian, extract the 2-3 most important core variables and translate them to English.
-Rules:
-1. Output ONLY a comma-separated list of English terms. No explanations, no boolean operators (like AND/OR), no brackets.
-2. Remove filler words (pengaruh, analisis, terhadap).
-Example input: analisis faktor-faktor yang mempengaruhi volume penjualan susu sapi perah
-Example output: sales volume, dairy cow
-Example input: Kinerja rantai pasok kopi
-Example output: supply chain performance, coffee`
+        content: `You are an academic intent parser.
+Given an Indonesian research topic, extract the core entities.
+Respond ONLY with a valid minified JSON object exactly like this:
+{"en":["english concept 1","english concept 2"],"id":["konsep indo 1","konsep indo 2"]}
+Do not use markdown, do not write explanations.`
       },
       {
         role: "user",
@@ -55,7 +71,7 @@ Example output: supply chain performance, coffee`
       
       try {
         const data = JSON.parse(text);
-        llmResult = data.choices?.[0]?.message?.content?.trim();
+        llmResult = data.choices?.[0]?.message?.content?.trim() || "";
       } catch (err) {
          const chunks = text.split('\n').filter(l => l.startsWith('data: ') && !l.includes('[DONE]'));
          for (const chunk of chunks) {
@@ -67,37 +83,28 @@ Example output: supply chain performance, coffee`
          }
       }
       
-      llmResult = llmResult.replace(/\n/g, '').replace(/["()]/g, '').trim();
+      // Bersihin markdown kalau LLM bandel
+      llmResult = llmResult.replace(/```json/g, '').replace(/```/g, '').trim();
       
-      // Jika LLM keputus (cuma 1 kata, atau panjang karakter terlalu pendek untuk sebuah penelitian)
-      if (!llmResult || llmResult.length < 5 || (llmResult.split(',').length < 2 && llmResult.length < 15)) {
-        throw new Error("LLM balikin data kepotong/cacat");
+      try {
+        const parsedJSON = JSON.parse(llmResult);
+        if (parsedJSON.en && parsedJSON.id) {
+          const en_str = parsedJSON.en.map((t: string) => `"${t}"`).join(" AND ");
+          const id_str = parsedJSON.id.map((t: string) => `"${t}"`).join(" AND ");
+          
+          return {
+            query_english: en_str,
+            query_indo: parsedJSON.id.join(" "),
+            core_concepts: [...parsedJSON.en, ...parsedJSON.id].map(s => s.toLowerCase())
+          };
+        }
+      } catch (parseError) {
+        throw new Error("Gagal parsing JSON dari LLM: " + llmResult);
       }
-
-      if (llmResult && llmResult.includes(',')) {
-         const terms = llmResult.split(',').map(t => t.trim()).filter(t => t);
-         // Kita rakit Boolean.
-         // Tapi TUNGGU! Kita harus nyelipin keyword Bahasa Indonesia aslinya biar jurnal lokal tetep dapet.
-         const cleanIdQuery = query.replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi)(?=\s|$)/gi, " ").replace(/\s+/g, " ").trim();
-         
-         const booleanQuery = terms.map(t => `"${t}"`).join(' AND ');
-         
-         // Format Akhir: (Inggris AND Inggris) OR (Indonesia)
-         return `(${booleanQuery}) OR ("${cleanIdQuery}")`;
-      }
-      if (llmResult) return `("${llmResult}") OR ("${query}")`;
-    } else {
-      console.error(`LLM Error: ${res.status}`);
     }
   } catch (e) {
     console.error("LLM Timeout or Error:", e);
   }
 
-  // Fallback Murni (Pake Judul Indo aslinya aja)
-  const cleanedQuery = query
-    .replace(/(?:^|\s)(pengaruh|analisis|dan|atau|terhadap|untuk|pada|di|dalam|studi|kasus|faktor|mempengaruhi|kabupaten|kota|provinsi)(?=\s|$)/gi, " ")
-    .replace(/[,_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return cleanedQuery;
+  return createFallback();
 }

@@ -4,7 +4,7 @@ import { search as openalex } from "./openalex";
 import { search as semanticscholar } from "./semanticscholar";
 import { search as crossref } from "./crossref";
 import { search as scopus } from "./scopus";
-import { generateKeywords } from "./llm";
+import { generateKeywords, ExtractedIntent } from "./llm";
 
 export interface SearchParams {
   vars: string;
@@ -49,20 +49,38 @@ function dedup(papers: Paper[]): Paper[] {
   });
 }
 
-function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuery: string): Paper[] {
+function calculateLexicalScore(paper: Paper, intent: ExtractedIntent): number {
+  const text = (paper.title + " " + (paper.abstract || "")).toLowerCase();
+  
+  // BM25 Simplified: Cek berapa banyak "core concept" (Inggris + Indo) yang muncul di teks
+  let matches = 0;
+  for (const concept of intent.core_concepts) {
+    if (text.includes(concept)) matches++;
+  }
+  
+  if (intent.core_concepts.length === 0 || matches === 0) return 0;
+  
+  // Poin proporsional (max 20)
+  return (matches / intent.core_concepts.length) * 20;
+}
+
+function applyFiltersAndScore(papers: Paper[], params: SearchParams, intent: ExtractedIntent): Paper[] {
   let filtered = [...papers];
 
-  // Language filter (simple heuristic)
-  if (params.lang && params.lang !== "both") {
-    const idChars = /[^a-zA-Z0-9\s.,;:!?()\-"'\[\]]/;
-    filtered = filtered.filter((p) => {
-      if (!p.abstract) return true;
-      const hasIndo = idChars.test(p.abstract) || /\b(di|dan|yang|dari|dengan|pada|untuk|dalam|adalah|ini|itu)\b/i.test(p.abstract);
-      return params.lang === "id" ? hasIndo : !hasIndo;
-    });
+  // Year filter
+  if (params.yearFrom) {
+    filtered = filtered.filter((p) => p.year >= params.yearFrom!);
+  }
+  if (params.yearTo) {
+    filtered = filtered.filter((p) => p.year <= params.yearTo!);
   }
 
-  // Apply exclude filters (Bugfix: exclude bisa undefined atau bukan string)
+  // Citations filter
+  if (params.minCited) {
+    filtered = filtered.filter((p) => p.cited >= params.minCited!);
+  }
+
+  // Apply exclude filters
   let excludeList: string[] = [];
   if (typeof params.exclude === 'string') {
     excludeList = params.exclude.split(',').map((e: string) => e.trim().toLowerCase()).filter((e: string) => e);
@@ -77,40 +95,14 @@ function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuer
     });
   }
 
-  // Extract core keywords from the boolean query for relevance scoring
-  // E.g., '"supply chain" AND "coffee"' -> ['supply chain', 'coffee']
-  const queryTerms = booleanQuery
-    .replace(/ AND /g, ',')
-    .replace(/ OR /g, ',')
-    .replace(/["()]/g, '')
-    .split(',')
-    .map(s => s.trim().toLowerCase())
-    .filter(s => s.length > 2);
-
   // Score each paper
   filtered.forEach(p => {
     let score = 0;
-    const title = (p.title || "").toLowerCase();
-    const abstract = (p.abstract || "").toLowerCase();
 
-    // 1. Topic Relevance (Heaviest Weight)
-    let matchCount = 0;
-    for (const term of queryTerms) {
-      if (title.includes(term)) {
-        score += 15; // Sangat relevan jika ada di Judul
-        matchCount++;
-      } else if (abstract.includes(term)) {
-        score += 5;  // Cukup relevan jika ada di Abstrak
-        matchCount++;
-      }
-    }
+    // 1. Lexical Relevance (Dynamic BM25)
+    score += calculateLexicalScore(p, intent);
 
-    // HAPUS PENALTI -50
-    // Biarkan matchCount === 0 skornya tetap 0 (tidak dihukum mati, hanya tenggelam ke bawah)
-
-    // 2. Citation Impact (Logarithmic Weight)
-    // 10 cit = +2 pts | 100 cit = +4 pts | 1000 cit = +6 pts
-    // Citations are important but won't outrank a highly relevant 0-citation new paper
+    // 2. Citation Impact
     if (p.cited > 0) {
       score += Math.log10(p.cited + 1) * 2;
     }
@@ -119,14 +111,11 @@ function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuer
     if (p.year) {
       const currentYear = new Date().getFullYear();
       if (p.year === currentYear || p.year === currentYear - 1) score += 3;
-      else if (p.year < currentYear - 10) score -= 2; // Old paper penalty
+      else if (p.year < currentYear - 10) score -= 2;
     }
 
-    (p as any)._relevanceScore = score;
+    (p as any)._relevanceScore = Number(score.toFixed(2));
   });
-
-  // JANGAN FILTER OUT. Cuma ngurutin aja. Yang relevansinya jelek taruh bawah.
-  // filtered = filtered.filter(p => (p as any)._relevanceScore > -10);
 
   return filtered;
 }
@@ -142,17 +131,23 @@ export interface SearchResult {
 export async function searchAll(params: SearchParams): Promise<SearchResult> {
   const start = Date.now();
   
-  // Tembak LLM 9Router buat dapet Boolean query (Atau fallback regex kalo gagal)
-  const query = await generateKeywords(params.vars);
+  // Tembak LLM 9Router buat dapet Intent JSON
+  const intent = await generateKeywords(params.vars);
+  
+  // Kueri yang dilempar ke API eksternal harus String, bukan JSON
+  // Kita gabungin Inggris OR Indo biar jangkauan tangkapan (Recall) luas
+  const apiQueryString = intent.query_english 
+    ? `(${intent.query_english}) OR ("${intent.query_indo}")`
+    : `"${intent.query_indo}"`;
 
   // Panggil paralel
   const sources: Promise<SourceResult>[] = [
-    openalex(query, params.yearFrom, params.yearTo, params.minCited, params.limit),
-    semanticscholar(query, params.yearFrom, params.yearTo, params.minCited, params.limit),
-    crossref(query, params.yearFrom, params.yearTo, params.minCited, params.limit),
+    openalex(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit),
+    semanticscholar(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit),
+    crossref(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit),
   ];
   if (params.scopus) {
-    sources.push(scopus(query, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    sources.push(scopus(apiQueryString, params.yearFrom, params.yearTo, params.minCited, params.limit));
   }
 
   const results = await Promise.allSettled(sources);
@@ -172,23 +167,15 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // Dedup
   let papers = dedup(allPapers);
 
-  // Apply filters and score
-  papers = applyFiltersAndScore(papers, params, query);
-
   // 1. HARD FILTER BAHASA (Lebih Cerdas & Aman)
-  // Alih-alih nebak kata "and" atau "dan", kita deteksi secara lunak.
-  // Jika abstrak terlalu pendek/kosong, kita tetap loloskan (daripada membunuh paper Indonesia yang tak ber-abstrak).
   if (params.lang === "id") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
        const isObviousEnglish = text.match(/\b(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)\b/g);
        const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)\b/g);
        
-       // Kalau gak ada tanda bahasa asing sama sekali, biarkan lewat
        if (!isObviousEnglish) return true;
-       // Kalau kosa kata indonya lebih banyak atau setara, biarkan lewat
        if (isObviousIndo && isObviousIndo.length >= isObviousEnglish.length) return true;
-       // Sisanya (inggris tulen tanpa kata indo) buang
        return false;
     });
   } else if (params.lang === "en") {
@@ -196,9 +183,12 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
        const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g);
        if (!isObviousIndo) return true;
-       return false; // Kalau ada kata hubung indo, buang
+       return false;
     });
   }
+
+  // Apply filters and score
+  papers = applyFiltersAndScore(papers, params, intent);
 
   // Sort by RELEVANCE SCORE first, then by citation count
   papers.sort((a, b) => {
@@ -216,7 +206,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     total: papers.length,
     sources: sourceMeta,
     time: Date.now() - start,
-    llmQuery: query, // Pass LLM query biar kesimpen di database / response debug
+    llmQuery: apiQueryString,
   };
 }
 
