@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import ScrapeForm from "@/components/ScrapeForm";
 import ResultDisplay from "@/components/ResultDisplay";
@@ -9,10 +11,37 @@ import History from "@/components/History";
 type JobStatus = "idle" | "pending" | "running" | "done" | "failed";
 
 export default function Home() {
+  const router = useRouter();
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Authentication Guard (Layer Auth)
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Kalau belum login, lempar ke halaman login
+        router.push("/login");
+      } else {
+        setLoadingAuth(false);
+      }
+    };
+
+    checkAuth();
+
+    // Dengerin kalau user tiba-tiba logout
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.push("/login");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [router]);
 
   const handleSubmit = useCallback(async (formData: any) => {
     setLoading(true);
@@ -36,6 +65,11 @@ export default function Home() {
       setLoading(false);
     }
   }, []);
+
+  // Tampilkan layar putih/loading sebentar pas ngecek login
+  if (loadingAuth) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50"><span className="animate-pulse text-gray-500">Checking authentication...</span></div>;
+  }
 
   return (
     <>
