@@ -40,12 +40,18 @@ function applyFiltersAndScore(papers: Paper[], params: SearchParams, booleanQuer
     });
   }
 
-  // Exclude keywords
-  if (params.exclude) {
-    const excludes = params.exclude.split(",").map((s) => s.trim().toLowerCase());
-    filtered = filtered.filter((p) => {
-      const text = `${p.title} ${p.abstract || ""} ${p.journal}`.toLowerCase();
-      return !excludes.some((ex) => text.includes(ex));
+  // Apply exclude filters (Bugfix: exclude bisa undefined atau bukan string)
+  let excludeList: string[] = [];
+  if (typeof params.exclude === 'string') {
+    excludeList = params.exclude.split(',').map((e: string) => e.trim().toLowerCase()).filter((e: string) => e);
+  } else if (Array.isArray(params.exclude)) {
+    excludeList = (params.exclude as any[]).map((e: any) => String(e).trim().toLowerCase()).filter((e: string) => e);
+  }
+
+  if (excludeList.length > 0) {
+    filtered = filtered.filter(p => {
+      const txt = (p.title + " " + (p.abstract || "")).toLowerCase();
+      return !excludeList.some(ex => txt.includes(ex));
     });
   }
 
