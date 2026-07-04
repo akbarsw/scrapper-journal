@@ -162,6 +162,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     total: papers.length,
     sources: sourceMeta,
     time: Date.now() - start,
+    llmQuery: query, // Pass LLM query biar kesimpen di database / response debug
   };
 }
 

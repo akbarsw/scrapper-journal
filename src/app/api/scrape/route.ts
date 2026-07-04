@@ -59,7 +59,10 @@ export async function POST(request: Request) {
       // Non-blocking — history save failure won't crash response
     }
 
-    return Response.json(result);
+    // DEBUG: Inject llm_query ke balikan JSON biar user bisa lihat di inspector jaringan
+    const debugResult = { ...result, llm_query_used: (result as any).llmQuery || "kosong/fallback" };
+    
+    return Response.json(debugResult);
   } catch (err: any) {
     return Response.json({ error: err.message }, { status: 500 });
   }
