@@ -107,7 +107,7 @@ export default function Home() {
           {activeTab === "search" && (
             <>
               {/* Area tengah — search box + header selalu terpaku di tengah layar */}
-              <div className={`flex flex-col items-center w-full ${!result && !loading ? 'justify-center min-h-[55vh] pb-[8vh]' : 'pt-8'}`}>
+              <div className={`flex flex-col items-center w-full ${!result && !loading ? 'justify-center min-h-[65vh] pb-[12vh]' : 'pt-8'}`}>
                 {/* Header — hilang setelah ada result */}
                 {!result && !loading && (
                   <div className="flex flex-col items-center mb-6 gap-3">
@@ -131,7 +131,7 @@ export default function Home() {
               </div>
 
               {/* Area bawah — loading / result / FAQ muncul di sini, push ke bawah */}
-              <div className="w-full pb-10">
+              <div className="w-full pb-10 mt-8">
                 {loading && (
                   <div className="text-center py-12 space-y-4">
                     <div className="inline-block w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
