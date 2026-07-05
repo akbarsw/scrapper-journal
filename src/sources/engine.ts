@@ -42,7 +42,7 @@ function dedup(papers: Paper[]): Paper[] {
     const key = p.doi
       ? `doi:${normalizeDoi(p.doi)}`
       : `title:${normalizeTitle(p.title)}`; // full title, no slice
-    
+
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -51,15 +51,15 @@ function dedup(papers: Paper[]): Paper[] {
 
 function calculateLexicalScore(paper: Paper, intent: ExtractedIntent): number {
   const text = (paper.title + " " + (paper.abstract || "")).toLowerCase();
-  
+
   // BM25 Simplified: Cek berapa banyak "core concept" (Inggris + Indo) yang muncul di teks
   let matches = 0;
   for (const concept of intent.core_concepts) {
     if (text.includes(concept)) matches++;
   }
-  
+
   if (intent.core_concepts.length === 0 || matches === 0) return 0;
-  
+
   // Poin proporsional (max 20)
   return (matches / intent.core_concepts.length) * 20;
 }
@@ -130,10 +130,10 @@ export interface SearchResult {
 
 export async function searchAll(params: SearchParams): Promise<SearchResult> {
   const start = Date.now();
-  
+
   // Tembak LLM 9Router buat dapet Intent JSON
   const intent = await generateKeywords(params.vars);
-  
+
   // Double Shoot Strategy (Daripada OR yang bikin API ngaco, tembak 2x terpisah lalu merge)
   const apiQueryEn = intent.query_english.replace(/"/g, "").replace(/ AND /g, " ");
   const apiQueryId = intent.query_indo.replace(/"/g, "").replace(/ AND /g, " ");
@@ -144,12 +144,18 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   if (apiQueryEn.length > 3) {
     sources.push(openalex(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
     sources.push(semanticscholar(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    if (params.scopus) {
+      sources.push(scopus(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
   }
   
   // Tembak Indo
   if (apiQueryId.length > 3) {
     sources.push(openalex(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
     sources.push(semanticscholar(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    if (params.scopus) {
+      sources.push(scopus(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
   }
 
   const results = await Promise.allSettled(sources);
@@ -159,9 +165,15 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   const sourceNames: string[] = [];
   if (apiQueryEn.length > 3) {
     sourceNames.push("OpenAlex (En)", "SemanticScholar (En)");
+    if (params.scopus) {
+      sourceNames.push("Scopus (En)");
+    }
   }
   if (apiQueryId.length > 3) {
     sourceNames.push("OpenAlex (Id)", "SemanticScholar (Id)");
+    if (params.scopus) {
+      sourceNames.push("Scopus (Id)");
+    }
   }
 
   results.forEach((r, i) => {
@@ -182,7 +194,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
        const isObviousEnglish = text.match(/\b(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)\b/g);
        const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)\b/g);
-       
+
        if (!isObviousEnglish) return true;
        if (isObviousIndo && isObviousIndo.length >= isObviousEnglish.length) return true;
        return false;
@@ -213,9 +225,9 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     id: p.doi || `local_${i}`, // Pake DOI atau ID palsu kalo gada DOI
     title: p.title
   }));
-  
+
   const rerankedIds = await rerankPapers(params.vars, candidatesForRerank);
-  
+
   // Terapkan hasil reranking
   if (rerankedIds.length > 0) {
     const rerankedPapers = [];
@@ -229,7 +241,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
         (papers[idx] as any)._aiVerified = true; // Tandai kalo ini udah dilulusin AI
       }
     }
-    
+
     // Kalau Gemini ngebuang jurnal (misal rendang sapi di-drop), dia gak akan dimasukin lagi
     // Gabungin hasil reranking + sisa jurnal biasa
     papers = [...rerankedPapers, ...remainingPapers];
@@ -248,4 +260,3 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     llmQuery: `${apiQueryEn} | ${apiQueryId}`,
   };
 }
-
