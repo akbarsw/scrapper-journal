@@ -17,9 +17,14 @@ export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { sidebarOpen, activeTab, fetchHistory, fetchSavedPapers, savedPapers, removePaper } = useAppStore();
+  const { sidebarOpen, activeTab, loadLocalData, saveHistory, savedPapers, removePaper } = useAppStore();
 
   useEffect(() => {
+    // Only load local data on the client to avoid hydration mismatch
+    if (typeof window !== 'undefined') {
+       loadLocalData();
+    }
+    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -27,8 +32,6 @@ export default function Home() {
       } else {
         setUser(session.user);
         setLoadingAuth(false);
-        fetchHistory(session.user.id);
-        fetchSavedPapers(session.user.id);
       }
     };
     checkAuth();
@@ -37,13 +40,17 @@ export default function Home() {
       else setUser(session.user);
     });
     return () => subscription.unsubscribe();
-  }, [router, fetchHistory, fetchSavedPapers]);
+  }, [router, loadLocalData]);
 
   const handleSubmit = useCallback(async (formData: any) => {
     setLoading(true);
     setError(null);
     setResult(null);
     useAppStore.getState().setActiveTab('search');
+    
+    // Save to local history immediately
+    const q = formData.vars || formData.query || "";
+    if (q) saveHistory(q);
 
     try {
       const res = await fetch("/api/scrape", {
@@ -54,15 +61,12 @@ export default function Home() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
-      if (user) {
-         fetchHistory(user.id); // Refresh history after search
-      }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [user, fetchHistory]);
+  }, [saveHistory]);
 
   if (loadingAuth) return null;
 
@@ -136,7 +140,7 @@ export default function Home() {
                     {savedPapers.map((paper: any) => (
                       <div key={paper.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group">
                         <button 
-                           onClick={() => removePaper(user?.id, paper.paper_id)}
+                           onClick={() => removePaper(paper.paper_id)}
                            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                            title="Hapus dari Library"
                         >

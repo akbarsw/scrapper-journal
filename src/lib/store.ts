@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { supabase } from './supabaseClient'
 
 interface SearchHistory {
   id: string
@@ -27,10 +26,11 @@ interface AppState {
   savedPapers: SavedPaper[]
   history: SearchHistory[]
   
-  fetchHistory: (userId: string) => Promise<void>
-  fetchSavedPapers: (userId: string) => Promise<void>
-  savePaper: (userId: string, paper: any) => Promise<void>
-  removePaper: (userId: string, paperId: string) => Promise<void>
+  // LocalStorage Actions (since Supabase tables need manual setup via UI)
+  loadLocalData: () => void
+  saveHistory: (query: string) => void
+  savePaper: (paper: any) => void
+  removePaper: (paperId: string) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -44,53 +44,72 @@ export const useAppStore = create<AppState>((set, get) => ({
   savedPapers: [],
   history: [],
 
-  fetchHistory: async (userId) => {
+  loadLocalData: () => {
     try {
-      const { data } = await supabase
-        .from('HistoryEntry')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (data) set({ history: data as any })
+      const hist = localStorage.getItem('referensia_history')
+      if (hist) set({ history: JSON.parse(hist) })
+      
+      const lib = localStorage.getItem('referensia_library')
+      if (lib) set({ savedPapers: JSON.parse(lib) })
     } catch (e) {
-      console.error('Failed to fetch history', e)
+      console.error('Failed to load local data', e)
     }
   },
 
-  fetchSavedPapers: async (userId) => {
+  saveHistory: (query: string) => {
     try {
-      const { data } = await supabase
-        .from('SavedPapers')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (data) set({ savedPapers: data })
+      const newEntry = {
+        id: Math.random().toString(36).substr(2, 9),
+        query,
+        created_at: new Date().toISOString()
+      }
+      
+      set((state) => {
+        // Prevent exact duplicates at the top
+        if (state.history.length > 0 && state.history[0].query === query) {
+           return state;
+        }
+        const updated = [newEntry, ...state.history].slice(0, 20) // Keep last 20
+        localStorage.setItem('referensia_history', JSON.stringify(updated))
+        return { history: updated }
+      })
     } catch (e) {
-      console.error('Failed to fetch saved papers', e)
+      console.error('Failed to save history', e)
     }
   },
 
-  savePaper: async (userId, paper) => {
+  savePaper: (paper: any) => {
     try {
       const newPaper = {
-        user_id: userId,
-        paper_id: paper.id,
+        id: Math.random().toString(36).substr(2, 9),
+        paper_id: paper.id || Math.random().toString(),
         title: paper.title,
         abstract: paper.abstract,
         url: paper.url || paper.doi || '',
+        created_at: new Date().toISOString()
       }
-      const { data, error } = await supabase.from('SavedPapers').insert([newPaper]).select()
-      if (data && !error) {
-        set((state) => ({ savedPapers: [data[0], ...state.savedPapers] }))
-      }
+      
+      set((state) => {
+        // Prevent duplicates
+        if (state.savedPapers.some(p => p.paper_id === newPaper.paper_id)) {
+           return state;
+        }
+        const updated = [newPaper, ...state.savedPapers]
+        localStorage.setItem('referensia_library', JSON.stringify(updated))
+        return { savedPapers: updated }
+      })
     } catch (e) {
       console.error('Failed to save paper', e)
     }
   },
 
-  removePaper: async (userId, paperId) => {
+  removePaper: (paperId: string) => {
     try {
-      await supabase.from('SavedPapers').delete().match({ user_id: userId, paper_id: paperId })
-      set((state) => ({ savedPapers: state.savedPapers.filter(p => p.paper_id !== paperId) }))
+      set((state) => {
+        const updated = state.savedPapers.filter(p => p.paper_id !== paperId)
+        localStorage.setItem('referensia_library', JSON.stringify(updated))
+        return { savedPapers: updated }
+      })
     } catch (e) {
       console.error('Failed to remove paper', e)
     }
