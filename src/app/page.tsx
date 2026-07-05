@@ -115,7 +115,7 @@ export default function Home() {
                       <div className="w-7 h-7 rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-lg leading-none">N</div>
                       <span className="text-xl font-bold tracking-tight text-gray-900">Nemu Jurnal</span>
                     </div>
-                    <h1 className="text-[28px] font-medium tracking-tight text-gray-900">Temukan referensi jurnalmu disini</h1>
+                    <h1 className="text-[28px] font-medium tracking-tight text-gray-700">Temukan referensi jurnalmu disini</h1>
                   </div>
                 )}
 
