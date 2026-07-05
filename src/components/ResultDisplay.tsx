@@ -1,8 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Calendar, Quote, Lock, Globe2, Bookmark, BookmarkCheck, ExternalLink, Sparkles
+  Calendar, Quote, Lock, Globe2, Bookmark, BookmarkCheck, ExternalLink, Sparkles, Activity
 } from "lucide-react";
+import { useAppStore } from "@/lib/store";
 
 /* ============================================================
    TOKENS — identitas sendiri (hijau tinta jurnal)
@@ -35,11 +36,26 @@ interface Props {
 
 /* --- RESULT CARD COMPONENT --- */
 function ResultCard({ paper }: { paper: any }) {
-  const [saved, setSaved] = useState(false);
+  const { savedPapers, savePaper, removePaper } = useAppStore();
+  const isSaved = savedPapers.some(p => p.paper_id === (paper.id || paper.doi));
   
   // Dummy stance logic until LLM reranker is implemented
   const mockStance = paper._relevanceScore > 20 ? "yes" : (paper._relevanceScore > 10 ? "possibly" : "no");
   const stanceColor = { yes: T.yes, possibly: T.possibly, no: T.no }[mockStance as "yes" | "possibly" | "no"];
+
+  const handleSaveToggle = () => {
+    const id = paper.id || paper.doi;
+    if (isSaved) {
+      removePaper(id);
+    } else {
+      savePaper({
+        id: id,
+        title: paper.title,
+        abstract: paper.abstract,
+        url: paper.doi ? `https://doi.org/${paper.doi}` : ''
+      });
+    }
+  };
 
   return (
     <div
@@ -94,9 +110,9 @@ function ResultCard({ paper }: { paper: any }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setSaved((v) => !v)} aria-label="Simpan">
-            {saved
-              ? <BookmarkCheck className="w-4 h-4" style={{ color: T.accent }} />
+          <button onClick={handleSaveToggle} aria-label="Simpan">
+            {isSaved
+              ? <BookmarkCheck className="w-4 h-4 text-teal-600" />
               : <Bookmark className="w-4 h-4" style={{ color: T.inkFaint }} />}
           </button>
           {paper.doi && (
