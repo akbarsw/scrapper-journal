@@ -114,9 +114,8 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                 </div>
             </div>
 
-            {/* Suggested Actions — hanya tampil saat belum ada input */}
-            {!hasContent && (
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+            {/* Suggested Actions*/}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
                 <button
                   onClick={() => setMessage("Hubungan CSR dengan profitabilitas")}
                   className="h-8 px-4 rounded-full bg-white border border-gray-200 text-[12px] font-medium text-gray-600 flex items-center gap-1.5 hover:bg-gray-50 transition-all"
@@ -129,8 +128,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                 >
                   <span className="text-gray-400 text-sm font-bold">TRY</span> <span className="text-gray-300">·</span> Pengaruh E-WOM pada Gen Z ↑
                 </button>
-              </div>
-            )}
+            </div>
         </div>
     );
 };
