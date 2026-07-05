@@ -77,25 +77,8 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                 }}
             />
 
-            {/* Main Search Box with SVG Moving Border */}
-            <div className="relative w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex flex-col pt-4 pb-2 px-4 z-10">
-
-                {/* SVG Animated Border Overlay (Dual Solid Trails) */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-[24px]" style={{ margin: '-1.2px', width: 'calc(100% + 2.4px)', height: 'calc(100% + 2.4px)' }}>
-                    <rect
-                        x="0.6"
-                        y="0.6"
-                        width="calc(100% - 1.2px)"
-                        height="calc(100% - 1.2px)"
-                        rx="24"
-                        ry="24"
-                        fill="transparent"
-                        stroke="#111827"
-                        strokeWidth="1.3"
-                        strokeDasharray="160 900"
-                        className="animate-border-flow"
-                    />
-                </svg>
+            {/* Main Search Box */}
+            <div className="w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:border-gray-300 flex flex-col pt-4 pb-2 px-4 relative z-10">
 
                 {/* Text Area */}
                 <textarea
