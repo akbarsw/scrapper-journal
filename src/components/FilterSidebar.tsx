@@ -177,17 +177,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
             )}
           </div>
 
-          {/* Methodology Section (Unused) */}
-          <div className="border-b border-gray-100">
-            <button className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors opacity-60 cursor-not-allowed">
-              <div className="flex flex-col items-start gap-1">
-                <span className="text-[15px] font-bold text-gray-900">Methodology</span>
-                <span className="text-[13px] text-gray-500">Study design, sample size, duration</span>
-              </div>
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            </button>
-          </div>
-
           {/* Sources Section */}
           <div className="border-b border-gray-100">
             <button onClick={() => setSourcesExpanded(!sourcesExpanded)} className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors cursor-pointer">
