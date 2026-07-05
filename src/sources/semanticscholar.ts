@@ -3,7 +3,7 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.semanticscholar.org/graph/v1";
-const API_KEY = process.env.S2_API_KEY || "s2k-nqPqRr9lJPQ94mUYriqGaiFKIVw3yDFF5JL8YyJj";
+const API_KEY = process.env.S2_API_KEY || "";
 
 export async function search(
   query: string,

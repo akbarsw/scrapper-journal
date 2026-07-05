@@ -6,6 +6,16 @@ const BASE = "https://api.openalex.org";
 const EMAIL = process.env.OPENALEX_EMAIL || "apakahbenar@ryznrouter.dev";
 const API_KEY = process.env.OPENALEX_API_KEY || "";
 
+function reconstructAbstract(invertedIndex: Record<string, number[]> | null): string | null {
+  if (!invertedIndex) return null;
+  const wordPositions: [string, number][] = [];
+  for (const [word, positions] of Object.entries(invertedIndex)) {
+    for (const pos of positions) wordPositions.push([word, pos]);
+  }
+  wordPositions.sort((a, b) => a[1] - b[1]);
+  return wordPositions.map(([w]) => w).join(" ");
+}
+
 export async function search(
   query: string,
   yearFrom?: number,
@@ -50,7 +60,7 @@ export async function search(
       cited: w.cited_by_count || 0,
       url: w.doi || w.id || "",
       source: "OpenAlex",
-      abstract: w.abstract_inverted_index ? "Abstract available" : null,
+      abstract: reconstructAbstract(w.abstract_inverted_index),
     }));
 
     return { papers, total: papers.length };
