@@ -30,7 +30,7 @@ function normalizeTitle(title: string): string {
   return title
     .toLowerCase()
     .normalize('NFKD') // pecah diacritics
-    .replace(/[̀-ͯ]/g, '') // hapus diacritics
+    .replace(/[\u0300-\u036f]/g, '') // hapus diacritics
     .replace(/&amp;/g, 'and')
     .replace(/[^\w\s]/g, '') // buang semua punctuation, bukan cuma slice
     .replace(/\s+/g, ' ')
@@ -53,16 +53,24 @@ function dedup(papers: Paper[]): Paper[] {
 function calculateLexicalScore(paper: Paper, intent: ExtractedIntent): number {
   const text = (paper.title + " " + (paper.abstract || "")).toLowerCase();
 
-  // BM25 Simplified: Cek berapa banyak "core concept" (Inggris + Indo) yang muncul di teks
-  let matches = 0;
-  for (const concept of intent.core_concepts) {
-    if (text.includes(concept)) matches++;
+  const enConcepts = intent.enConcepts || [];
+  const idConcepts = intent.idConcepts || [];
+
+  let matchesEn = 0;
+  for (const concept of enConcepts) {
+    if (text.includes(concept.toLowerCase())) matchesEn++;
   }
 
-  if (intent.core_concepts.length === 0 || matches === 0) return 0;
+  let matchesId = 0;
+  for (const concept of idConcepts) {
+    if (text.includes(concept.toLowerCase())) matchesId++;
+  }
 
-  // Poin proporsional (max 20)
-  return (matches / intent.core_concepts.length) * 20;
+  const scoreEn = enConcepts.length > 0 ? (matchesEn / enConcepts.length) * 20 : 0;
+  const scoreId = idConcepts.length > 0 ? (matchesId / idConcepts.length) * 20 : 0;
+
+  // Bilateral check: take maximum of English match or Indonesian match
+  return Math.max(scoreEn, scoreId);
 }
 
 function applyFiltersAndScore(papers: Paper[], params: SearchParams, intent: ExtractedIntent): Paper[] {
@@ -150,7 +158,11 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
       sources.push(semanticscholar(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
     if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
-      sources.push(scopus(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+      // Correct boolean format for Scopus
+      const scopusQueryEn = intent.enConcepts && intent.enConcepts.length > 0
+        ? intent.enConcepts.map((t: string) => `TITLE-ABS-KEY("${t}")`).join(" AND ")
+        : `TITLE-ABS-KEY("${apiQueryEn}")`;
+      sources.push(scopus(scopusQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
   }
   
@@ -163,7 +175,11 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
       sources.push(semanticscholar(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
     if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
-      sources.push(scopus(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+      // Correct boolean format for Scopus
+      const scopusQueryId = intent.idConcepts && intent.idConcepts.length > 0
+        ? intent.idConcepts.map((t: string) => `TITLE-ABS-KEY("${t}")`).join(" AND ")
+        : `TITLE-ABS-KEY("${apiQueryId}")`;
+      sources.push(scopus(scopusQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
   }
 
@@ -208,8 +224,8 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   if (params.lang === "id") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
-       const isObviousEnglish = text.match(/(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)/g);
-       const isObviousIndo = text.match(/(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)/g);
+       const isObviousEnglish = text.match(/\b(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)\b/g);
+       const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)\b/g);
 
        if (!isObviousEnglish) return true;
        if (isObviousIndo && isObviousIndo.length >= isObviousEnglish.length) return true;
@@ -218,7 +234,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   } else if (params.lang === "en") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
-       const isObviousIndo = text.match(/(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)/g);
+       const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g);
        if (!isObviousIndo) return true;
        return false;
     });
@@ -238,7 +254,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // SEMANTIC RERANKING (Panggil Gemini buat ngebuang jurnal nyasar)
   // Biar gak timeout, kita kirim maksimal 15 teratas hasil lexical ke LLM
   const candidatesForRerank = papers.slice(0, 15).map((p, i) => ({
-    id: p.doi || `local_${i}`, // Pake DOI atau ID palsu kalo gada DOI
+    id: p.doi || `local_${i}`, // Pake DOI or ID palsu kalo gada DOI
     title: p.title
   }));
 

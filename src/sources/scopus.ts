@@ -16,8 +16,11 @@ export async function search(
   const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
-    // Build Scopus query syntax — simple query, no year in API call
-    let scopusQuery = query.split(",").map(s => `TITLE-ABS-KEY("${s.trim()}")`).join(" OR ");
+    // Build Scopus query syntax — bypass if already formatted
+    let scopusQuery = query;
+    if (!query.includes("TITLE-ABS-KEY")) {
+      scopusQuery = query.split(",").map(s => `TITLE-ABS-KEY("${s.trim()}")`).join(" OR ");
+    }
 
     // Manual URL build — URLSearchParams causes 401 on Vercel
     const url = `${BASE}?query=${encodeURIComponent(scopusQuery)}&count=${Math.min(limit, 25)}&sort=-citedby-count`;

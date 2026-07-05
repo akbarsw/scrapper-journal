@@ -2,6 +2,8 @@ export interface ExtractedIntent {
   query_english: string;
   query_indo: string;
   core_concepts: string[];
+  enConcepts?: string[];
+  idConcepts?: string[];
 }
 
 // 1. INTENT PARSER
@@ -20,7 +22,9 @@ export async function generateKeywords(query: string): Promise<ExtractedIntent> 
     return {
       query_english: "",
       query_indo: cleanIdQuery,
-      core_concepts: cleanIdQuery.split(" ").filter(w => w.length > 2)
+      core_concepts: cleanIdQuery.split(" ").filter(w => w.length > 2),
+      enConcepts: [],
+      idConcepts: cleanIdQuery.split(" ").filter(w => w.length > 2)
     };
   };
 
@@ -36,9 +40,10 @@ export async function generateKeywords(query: string): Promise<ExtractedIntent> 
       {
         role: "system",
         content: `You are an academic intent parser.
-Given an Indonesian research topic, extract the core entities.
+Given a research topic/query (in Indonesian or English), extract the core entities and concepts.
 Respond ONLY with a valid minified JSON object exactly like this:
 {"en":["english concept 1","english concept 2"],"id":["konsep indo 1","konsep indo 2"]}
+Make sure concepts are cleaned of noise words. Provide translation to the other language if applicable.
 Do not use markdown, do not write explanations.`
       },
       {
@@ -96,7 +101,9 @@ Do not use markdown, do not write explanations.`
           return {
             query_english: en_str,
             query_indo: parsedJSON.id.join(" "),
-            core_concepts: [...parsedJSON.en, ...parsedJSON.id].map(s => s.toLowerCase())
+            core_concepts: [...parsedJSON.en, ...parsedJSON.id].map(s => s.toLowerCase()),
+            enConcepts: parsedJSON.en,
+            idConcepts: parsedJSON.id
           };
         }
       } catch (parseError) {
