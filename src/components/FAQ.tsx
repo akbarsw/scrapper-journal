@@ -43,7 +43,7 @@ const FAQ_ITEMS = [
 
 export default function FAQ() {
   return (
-    <div id="faq-section" className="w-full max-w-2xl mx-auto mt-12 px-2">
+    <div id="faq-section" className="w-full max-w-2xl mx-auto mt-36 pt-20 px-2">
       <h2 className="text-lg font-semibold text-gray-800 mb-1">Pertanyaan Umum</h2>
       <p className="text-sm text-gray-400 mb-6">Tentang cara kerja Nemu Jurnal</p>
       <Accordion type="single" collapsible className="w-full">
