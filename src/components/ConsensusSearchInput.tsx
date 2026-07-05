@@ -80,7 +80,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
             {/* Main Search Box with SVG Moving Border */}
             <div className="relative w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex flex-col pt-4 pb-2 px-4 z-10">
 
-                {/* SVG Animated Border Overlay (Stepped Comet Trail) */}
+                {/* SVG Animated Border Overlay (Dual Stepped Comet Trails) */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-[24px]" style={{ margin: '-1.2px', width: 'calc(100% + 2.4px)', height: 'calc(100% + 2.4px)' }}>
                     {/* Tail Layer (Light Gray) */}
                     <rect
@@ -93,7 +93,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                         fill="transparent"
                         stroke="#d4d4d8"
                         strokeWidth="1.2"
-                        strokeDasharray="180 2000"
+                        strokeDasharray="180 880"
                         className="animate-border-flow"
                     />
                     {/* Body Layer (Medium Zinc) */}
@@ -107,7 +107,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                         fill="transparent"
                         stroke="#71717a"
                         strokeWidth="1.3"
-                        strokeDasharray="100 2000"
+                        strokeDasharray="100 960"
                         className="animate-border-flow"
                         style={{ animationDelay: '0.08s' }}
                     />
@@ -122,7 +122,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                         fill="transparent"
                         stroke="#09090b"
                         strokeWidth="1.4"
-                        strokeDasharray="40 2000"
+                        strokeDasharray="40 1020"
                         className="animate-border-flow"
                         style={{ animationDelay: '0.16s' }}
                     />
