@@ -77,47 +77,57 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                 }}
             />
 
-            {/* Main Search Box Wrapper for Animated Gradient Border */}
-            <div className="relative w-full p-[1.2px] rounded-[25px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-10">
+            {/* Main Search Box with SVG Moving Border */}
+            <div className="relative w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex flex-col pt-4 pb-2 px-4 z-10">
 
-                {/* Animated Border Background (Spinning Black Comet Trail) */}
-                <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_60%,#71717a_85%,#09090b_98%,transparent_100%)] animate-[spin_4s_linear_infinite] opacity-95" />
-
-                {/* Inner Search Box Card */}
-                <div className="relative w-full bg-white rounded-[24px] flex flex-col pt-4 pb-2 px-4 z-10">
-
-                    {/* Text Area */}
-                    <textarea
-                        ref={textareaRef}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Ask the research..."
-                        disabled={isLoading}
-                        className="w-full bg-transparent border-0 outline-none text-[16px] text-gray-900 placeholder:text-gray-400 resize-none overflow-hidden leading-relaxed mb-3 pl-2"
-                        rows={1}
-                        autoFocus
+                {/* SVG Animated Border Overlay */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-[24px]" style={{ margin: '-1px', width: 'calc(100% + 2px)', height: 'calc(100% + 2px)' }}>
+                    <rect
+                        x="0.5"
+                        y="0.5"
+                        width="calc(100% - 1px)"
+                        height="calc(100% - 1px)"
+                        rx="24"
+                        ry="24"
+                        fill="transparent"
+                        stroke="#09090b"
+                        strokeWidth="1.5"
+                        strokeDasharray="120 2000"
+                        className="animate-border-flow"
                     />
+                </svg>
 
-                    {/* Bottom Row Tools */}
-                    <div className="flex items-center justify-between mt-1">
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
-                            >
-                                <Filter className="w-4 h-4" /> Filter
-                            </button>
-                        </div>
+                {/* Text Area */}
+                <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask the research..."
+                    disabled={isLoading}
+                    className="w-full bg-transparent border-0 outline-none text-[16px] text-gray-900 placeholder:text-gray-400 resize-none overflow-hidden leading-relaxed mb-3 pl-2"
+                    rows={1}
+                    autoFocus
+                />
 
+                {/* Bottom Row Tools */}
+                <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-1.5">
                         <button
-                            onClick={handleSend}
-                            disabled={!hasContent || isLoading}
-                            className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd]'}`}
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
                         >
-                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
+                            <Filter className="w-4 h-4" /> Filter
                         </button>
                     </div>
+
+                    <button
+                        onClick={handleSend}
+                        disabled={!hasContent || isLoading}
+                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd]'}`}
+                    >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
+                    </button>
                 </div>
             </div>
 

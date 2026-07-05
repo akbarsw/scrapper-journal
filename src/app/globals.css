@@ -20,3 +20,16 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+@keyframes border-flow {
+  from {
+    stroke-dashoffset: 2120;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-border-flow {
+  animation: border-flow 6s linear infinite;
+}
