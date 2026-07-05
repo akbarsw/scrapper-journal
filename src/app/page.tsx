@@ -130,6 +130,28 @@ export default function Home() {
                     Connected with 200M+ Paper Research Database
                   </p>
                 )}
+
+                {/* Claude-style suggestion pills */}
+                {!result && !loading && (
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                      Tulis
+                    </button>
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                      Pelajari
+                    </button>
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+                      Kehidupan
+                    </button>
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      FAQ
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Area bawah — loading / result / FAQ muncul di sini, push ke bawah */}
