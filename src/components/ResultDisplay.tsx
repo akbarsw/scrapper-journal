@@ -77,8 +77,8 @@ function ResultCard({ paper }: { paper: any }) {
 
       {/* Title */}
       <h3
-        className="text-[15.5px] font-semibold leading-snug mb-3"
-        style={{ color: T.ink, fontFamily: "'Source Serif 4', Georgia, serif" }}
+        className="text-[15.5px] font-serif font-semibold leading-snug mb-3"
+        style={{ color: T.ink }}
       >
         {paper.title}
       </h3>
