@@ -29,7 +29,7 @@ function normalizeTitle(title: string): string {
   return title
     .toLowerCase()
     .normalize('NFKD') // pecah diacritics
-    .replace(/[\u0300-\u036f]/g, '') // hapus diacritics
+    .replace(/[̀-ͯ]/g, '') // hapus diacritics
     .replace(/&amp;/g, 'and')
     .replace(/[^\w\s]/g, '') // buang semua punctuation, bukan cuma slice
     .replace(/\s+/g, ' ')
@@ -178,7 +178,12 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
 
   results.forEach((r, i) => {
     if (r.status === "fulfilled") {
-      allPapers.push(...r.value.papers);
+      // Tag each paper with its source key for client-side filtering
+      const papersWithKey = r.value.papers.map(p => ({
+        ...p,
+        sourceKey: sourceNames[i]
+      }));
+      allPapers.push(...papersWithKey);
       sourceMeta.push({ name: sourceNames[i], count: r.value.papers.length, error: r.value.error });
     } else {
       sourceMeta.push({ name: sourceNames[i], count: 0, error: r.reason?.message || "Failed" });
@@ -192,8 +197,8 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   if (params.lang === "id") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
-       const isObviousEnglish = text.match(/\b(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)\b/g);
-       const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)\b/g);
+       const isObviousEnglish = text.match(/(the|of|and|in|to|a|is|for|on|with|by|an|this|study|results|we)/g);
+       const isObviousIndo = text.match(/(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis|kemitraan|susu|sapi|perah|koperasi|peternak)/g);
 
        if (!isObviousEnglish) return true;
        if (isObviousIndo && isObviousIndo.length >= isObviousEnglish.length) return true;
@@ -202,7 +207,7 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   } else if (params.lang === "en") {
     papers = papers.filter(p => {
        const text = (p.title + " " + (p.abstract || "")).toLowerCase();
-       const isObviousIndo = text.match(/\b(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)\b/g);
+       const isObviousIndo = text.match(/(dan|yang|di|dari|untuk|pada|dengan|ini|itu|sebagai|adalah|pengaruh|analisis)/g);
        if (!isObviousIndo) return true;
        return false;
     });
@@ -242,14 +247,15 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
       }
     }
 
-    // Kalau Gemini ngebuang jurnal (misal rendang sapi di-drop), dia gak akan dimasukin lagi
     // Gabungin hasil reranking + sisa jurnal biasa
     papers = [...rerankedPapers, ...remainingPapers];
   }
 
-  // Terapkan limit akhir setelah LLM beres nyortir
-  if (params.limit && params.limit > 0) {
-    papers = papers.slice(0, params.limit);
+  // Keep a larger list of papers (up to 120) so the client can filter them by source
+  // without losing the papers that didn't make the top 20 list.
+  const finalLimit = params.limit ? Math.max(params.limit, 120) : 120;
+  if (papers.length > finalLimit) {
+    papers = papers.slice(0, finalLimit);
   }
 
   return {

@@ -9,6 +9,7 @@ export interface Paper {
   url: string;
   source: string;
   abstract: string | null;
+  sourceKey?: string;
 }
 
 export interface SourceResult {

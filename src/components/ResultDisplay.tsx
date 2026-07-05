@@ -58,7 +58,7 @@ function ResultCard({ paper }: { paper: any }) {
 
   return (
     <div
-      className="rounded-2xl p-5 mb-3 transition-shadow hover:shadow-[0_4px_16px_rgba(28,35,33,0.07)]"
+      className="rounded-2xl p-5 mb-3 transition-shadow hover:shadow-[0_4px_16px_rgba(28,35,33,0.07)] font-sans"
       style={{ background: T.surface, border: `1px solid ${T.border}` }}
     >
       {/* Badge row */}
@@ -88,7 +88,7 @@ function ResultCard({ paper }: { paper: any }) {
         <div className="mb-3">
           <button
             onClick={() => setShowAbstract(v => !v)}
-            className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 rounded-full border transition-all"
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 rounded-full border transition-all cursor-pointer"
             style={{
               borderColor: showAbstract ? T.accent : T.border,
               color: showAbstract ? T.accent : T.inkSoft,
@@ -128,13 +128,13 @@ function ResultCard({ paper }: { paper: any }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleSaveToggle} aria-label="Simpan">
+          <button onClick={handleSaveToggle} aria-label="Simpan" className="cursor-pointer">
             {isSaved
               ? <BookmarkCheck className="w-4 h-4 text-teal-600" />
               : <Bookmark className="w-4 h-4" style={{ color: T.inkFaint }} />}
           </button>
           {paper.doi && (
-            <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
+            <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer" className="cursor-pointer">
               <ExternalLink className="w-4 h-4" style={{ color: T.inkFaint }} />
             </a>
           )}
@@ -146,12 +146,19 @@ function ResultCard({ paper }: { paper: any }) {
 
 /* --- MAIN RENDER --- */
 export default function ResultDisplay({ data }: Props) {
+  const [activeSourceFilter, setActiveSourceFilter] = useState<string | null>(null);
+
   if (!data) return null;
+
+  // Filter papers based on clicked source pill
+  const filteredPapers = activeSourceFilter
+    ? data.papers.filter((p: any) => p.sourceKey === activeSourceFilter)
+    : data.papers.slice(0, 20); // Default to top 20 ranked papers
 
   return (
     <div className="font-sans">
       {/* STATUS HEADER */}
-      <div className="flex items-center justify-between px-3 py-3 mb-3 bg-teal-50/60 rounded-xl border border-teal-100">
+      <div className="flex items-center justify-between px-3 py-3 mb-3 bg-teal-50/60 rounded-xl border border-teal-100 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-700">
             <Sparkles className="w-4 h-4 text-white" />
@@ -164,26 +171,53 @@ export default function ResultDisplay({ data }: Props) {
           </div>
         </div>
         <div className="flex gap-1.5 flex-wrap justify-end">
-          {data.sources.map((s) => (
-            <span
-              key={s.name}
-              className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${
-                s.count > 0
-                  ? "bg-white border-teal-200 text-teal-700"
-                  : "bg-gray-50 border-gray-200 text-gray-400"
-              }`}
-            >
-              {s.name} {s.count > 0 ? `(${s.count})` : "(0)"}
-            </span>
-          ))}
+          {data.sources.map((s) => {
+            const isActive = activeSourceFilter === s.name;
+            return (
+              <button
+                key={s.name}
+                disabled={s.count === 0}
+                onClick={() => setActiveSourceFilter(isActive ? null : s.name)}
+                className={`text-[11px] px-2.5 py-0.5 rounded-full border font-medium transition-all ${
+                  s.count > 0
+                    ? isActive
+                      ? "bg-teal-700 border-teal-700 text-white shadow-sm font-semibold cursor-pointer transform scale-105"
+                      : "bg-white border-teal-200 text-teal-700 hover:bg-teal-50 hover:border-teal-300 cursor-pointer active:scale-95"
+                    : "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+                title={s.count > 0 ? `Filter hanya tampilkan ${s.name}` : "Tidak ada hasil dari sumber ini"}
+              >
+                {s.name} {s.count > 0 ? `(${s.count})` : "(0)"}
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* FILTER STATUS MESSAGE */}
+      {activeSourceFilter && (
+        <div className="flex items-center justify-between px-3 py-2 mb-3 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-600 transition-all">
+          <span>Menampilkan <strong>{filteredPapers.length}</strong> jurnal dari <strong>{activeSourceFilter}</strong></span>
+          <button 
+            onClick={() => setActiveSourceFilter(null)}
+            className="text-teal-600 hover:text-teal-700 font-semibold cursor-pointer transition-colors"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
+
       {/* PAPERS LIST */}
       <div className="flex flex-col">
-        {data.papers.map((p: any, i: number) => (
-          <ResultCard key={p.doi || i} paper={p} />
-        ))}
+        {filteredPapers.length === 0 ? (
+          <div className="text-center py-10 bg-gray-50 rounded-2xl border border-gray-100 text-gray-400 text-sm">
+            Tidak ada jurnal yang sesuai dengan filter ini.
+          </div>
+        ) : (
+          filteredPapers.map((p: any, i: number) => (
+            <ResultCard key={p.doi || `${p.title}_${i}`} paper={p} />
+          ))
+        )}
       </div>
     </div>
   );
