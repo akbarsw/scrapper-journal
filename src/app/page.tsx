@@ -70,18 +70,19 @@ export default function Home() {
     <div className="flex h-screen overflow-hidden bg-white font-sans">
       <Sidebar user={user} />
 
-      <main className={`flex-1 flex flex-col h-full overflow-y-auto relative bg-white transition-all duration-300 ${sidebarOpen ? 'ml-0' : 'ml-0'}`}>
-        {/* Mobile Sidebar Toggle - Only visible on small screens when sidebar is hidden */}
+      <main className={`flex-1 flex flex-col h-full overflow-y-auto relative bg-white transition-all duration-300`}>
+        {/* Toggle Button (Always visible on Desktop when sidebar closed, or always on Mobile) */}
         {!sidebarOpen && (
            <button 
              onClick={() => useAppStore.getState().setSidebarOpen(true)}
-             className="absolute top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 md:hidden"
+             className="absolute top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 flex items-center justify-center transition-all"
            >
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
            </button>
         )}
 
-        <div className="flex-1 w-full max-w-4xl mx-auto px-6 flex flex-col justify-center pb-[10vh] pt-[5vh]">
+        {/* Gunakan justify-center kalo belum ada result, tapi pake justify-start (atas) lalu di-padding atasnya kalo udah ada result, supaya kotak pencarian nggak terbang ke atas */}
+        <div className={`flex-1 w-full max-w-4xl mx-auto px-6 flex flex-col ${(!result && !loading && activeTab === 'search') ? 'justify-center pb-[10vh]' : 'justify-start pt-[5vh] md:pt-[10vh]'}`}>
           
           {/* Main Search View */}
           {activeTab === 'search' && (
