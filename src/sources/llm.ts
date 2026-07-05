@@ -85,7 +85,7 @@ Do not use markdown, do not write explanations.`
       }
       
       // Bersihin markdown kalau LLM bandel
-      llmResult = llmResult.replace(/```json/g, '').replace(/```/g, '').trim();
+      llmResult = llmResult.replace(/<think>[\s\S]*?<\/think>/g, '').replace(/```json/g, '').replace(/```/g, '').trim();
       
       try {
         const parsedJSON = JSON.parse(llmResult);
@@ -159,7 +159,7 @@ Rules:
     const content = data.choices[0]?.message?.content?.trim() || "";
     
     // Anti-bodoh bersihin markdown JSON kalau AI bengal
-    const cleanJson = content.replace(/```json/g, "").replace(/```/g, "").trim();
+    const cleanJson = content.replace(/<think>[\s\S]*?<\/think>/g, "").replace(/```json/g, "").replace(/```/g, "").trim();
     
     let rankedIds: string[] = [];
     try {
