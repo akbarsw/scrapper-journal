@@ -107,7 +107,7 @@ export default function Home() {
           {activeTab === "search" && (
             <>
               {/* Area tengah — search box + header selalu terpaku di tengah layar */}
-              <div className="flex flex-col items-center justify-center min-h-[60vh]">
+              <div className={`flex flex-col items-center w-full ${!result && !loading ? 'justify-center min-h-[45vh]' : 'pt-10'}`}>
                 {/* Header — hilang setelah ada result */}
                 {!result && !loading && (
                   <div className="flex flex-col items-center mb-6 gap-3">

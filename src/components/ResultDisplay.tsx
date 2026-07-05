@@ -1,13 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import {
-  Calendar, Quote, Lock, Globe2, Bookmark, BookmarkCheck, ExternalLink, Sparkles, Activity
+  Calendar, Quote, Lock, Globe2, Bookmark, BookmarkCheck, ExternalLink, Sparkles, ChevronDown
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 
-/* ============================================================
-   TOKENS — identitas sendiri (hijau tinta jurnal)
-   ============================================================ */
 const T = {
   paper: "#FAFAF8",
   surface: "#FFFFFF",
@@ -17,7 +14,6 @@ const T = {
   border: "#E5E3DB",
   accent: "#2F6F5E",
   accentSoft: "#E7F0EC",
-  accentHover: "#265C4E",
   yes: "#2F7D5A",
   possibly: "#B8862E",
   no: "#B0503F",
@@ -34,14 +30,11 @@ interface Props {
   };
 }
 
-/* --- RESULT CARD COMPONENT --- */
+/* --- RESULT CARD --- */
 function ResultCard({ paper }: { paper: any }) {
+  const [showAbstract, setShowAbstract] = useState(false);
   const { savedPapers, savePaper, removePaper } = useAppStore();
   const isSaved = savedPapers.some(p => p.paper_id === (paper.id || paper.doi));
-  
-  // Dummy stance logic until LLM reranker is implemented
-  const mockStance = paper._relevanceScore > 20 ? "yes" : (paper._relevanceScore > 10 ? "possibly" : "no");
-  const stanceColor = { yes: T.yes, possibly: T.possibly, no: T.no }[mockStance as "yes" | "possibly" | "no"];
 
   const handleSaveToggle = () => {
     const id = paper.id || paper.doi;
@@ -49,26 +42,29 @@ function ResultCard({ paper }: { paper: any }) {
       removePaper(id);
     } else {
       savePaper({
-        id: id,
+        id,
         title: paper.title,
         abstract: paper.abstract,
-        url: paper.doi ? `https://doi.org/${paper.doi}` : ''
+        url: paper.doi ? `https://doi.org/${paper.doi}` : ""
       });
     }
   };
 
+  const sourceLabel =
+    paper.source === "scopus" ? "Scopus"
+    : paper.source === "semantic-scholar" ? "SemanticScholar"
+    : paper.source === "openalex" ? "OpenAlex"
+    : paper.source;
+
   return (
     <div
-      className="rounded-2xl p-5 transition-shadow hover:shadow-[0_4px_16px_rgba(28,35,33,0.06)] mb-3"
+      className="rounded-2xl p-5 mb-3 transition-shadow hover:shadow-[0_4px_16px_rgba(28,35,33,0.07)]"
       style={{ background: T.surface, border: `1px solid ${T.border}` }}
     >
       {/* Badge row */}
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-        <span
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider"
-          style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" }}
-        >
-          {paper.source === "scopus" ? "Scopus" : (paper.source === "semantic-scholar" ? "SemanticScholar" : (paper.source === "openalex" ? "OpenAlex" : paper.source))}
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+          {sourceLabel}
         </span>
         <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: T.inkSoft }}>
           <Calendar className="w-3.5 h-3.5" /> {paper.year}
@@ -81,20 +77,40 @@ function ResultCard({ paper }: { paper: any }) {
 
       {/* Title */}
       <h3
-        className="text-[15.5px] font-semibold leading-snug mb-2.5 cursor-pointer hover:underline"
+        className="text-[15.5px] font-semibold leading-snug mb-3"
         style={{ color: T.ink, fontFamily: "'Source Serif 4', Georgia, serif" }}
       >
         {paper.title}
       </h3>
 
-      {/* Extracted abstract box */}
+      {/* Abstract toggle — hanya muncul kalau ada abstrak */}
       {paper.abstract && (
-         <div
-           className="rounded-xl px-3.5 py-3 text-[13px] leading-relaxed mb-3 line-clamp-3"
-           style={{ background: T.extractBg, color: "#3B3F3A" }}
-         >
-           {paper.abstract}
-         </div>
+        <div className="mb-3">
+          <button
+            onClick={() => setShowAbstract(v => !v)}
+            className="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1 rounded-full border transition-all"
+            style={{
+              borderColor: showAbstract ? T.accent : T.border,
+              color: showAbstract ? T.accent : T.inkSoft,
+              background: showAbstract ? T.accentSoft : "transparent"
+            }}
+          >
+            Abstrak
+            <ChevronDown
+              className="w-3.5 h-3.5 transition-transform duration-200"
+              style={{ transform: showAbstract ? "rotate(180deg)" : "rotate(0deg)" }}
+            />
+          </button>
+
+          {showAbstract && (
+            <div
+              className="mt-2 rounded-xl px-3.5 py-3 text-[13px] leading-relaxed"
+              style={{ background: T.extractBg, color: "#3B3F3A" }}
+            >
+              {paper.abstract}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Footer */}
@@ -105,8 +121,10 @@ function ResultCard({ paper }: { paper: any }) {
             <Quote className="w-3 h-3" /> {paper.cited} sitasi
           </span>
           <span className="inline-flex items-center gap-1">
-             <span className="font-semibold text-xs text-green-700">+{paper._relevanceScore} score</span>
-             {paper._aiVerified && <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded ml-1">AI Verified</span>}
+            <span className="font-semibold text-xs text-green-700">+{paper._relevanceScore} score</span>
+            {paper._aiVerified && (
+              <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded ml-1">AI Verified</span>
+            )}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -116,9 +134,9 @@ function ResultCard({ paper }: { paper: any }) {
               : <Bookmark className="w-4 h-4" style={{ color: T.inkFaint }} />}
           </button>
           {paper.doi && (
-             <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
-               <ExternalLink className="w-4 h-4" style={{ color: T.inkFaint }} />
-             </a>
+            <a href={`https://doi.org/${paper.doi}`} target="_blank" rel="noreferrer">
+              <ExternalLink className="w-4 h-4" style={{ color: T.inkFaint }} />
+            </a>
           )}
         </div>
       </div>
@@ -131,32 +149,40 @@ export default function ResultDisplay({ data }: Props) {
   if (!data) return null;
 
   return (
-    <div className="space-y-4 font-sans" style={{ background: T.paper, padding: '16px', borderRadius: '16px' }}>
-      
-      {/* 1. STATUS HEADER */}
-      <div className="flex items-center justify-between px-2 mb-4 bg-teal-50/50 p-4 rounded-xl border border-teal-100">
-         <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-700 shadow-sm">
-              <Sparkles className="w-5 h-5 text-white" />
-           </div>
-           <div>
-             <h3 className="font-bold text-[15px] text-gray-900 tracking-tight">Referensia Found {data.total} Results</h3>
-             <p className="text-[12px] text-gray-500 mt-0.5">Found in {data.time / 1000}s from {data.sources.filter(s => s.count > 0).length} sources</p>
-           </div>
-         </div>
-         <div className="flex gap-1.5 text-[11px] font-medium">
-           {data.sources.map((s) => (
-             <span key={s.name} className={`px-2.5 py-1 rounded-full border ${s.count > 0 ? 'bg-white border-teal-200 text-teal-700 shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
-               {s.name} ({s.count > 0 ? 'Id' : '0'})
-             </span>
-           ))}
-         </div>
+    <div className="font-sans">
+      {/* STATUS HEADER */}
+      <div className="flex items-center justify-between px-3 py-3 mb-3 bg-teal-50/60 rounded-xl border border-teal-100">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-700">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-[14px] text-gray-900 tracking-tight">Ditemukan {data.total} Jurnal</h3>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              {data.time / 1000}s · {data.sources.filter(s => s.count > 0).length} sumber
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-1.5 flex-wrap justify-end">
+          {data.sources.map((s) => (
+            <span
+              key={s.name}
+              className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${
+                s.count > 0
+                  ? "bg-white border-teal-200 text-teal-700"
+                  : "bg-gray-50 border-gray-200 text-gray-400"
+              }`}
+            >
+              {s.name} {s.count > 0 ? `(${s.count})` : "(0)"}
+            </span>
+          ))}
+        </div>
       </div>
 
-      {/* 2. PAPERS LIST */}
+      {/* PAPERS LIST */}
       <div className="flex flex-col">
         {data.papers.map((p: any, i: number) => (
-           <ResultCard key={p.doi || i} paper={p} />
+          <ResultCard key={p.doi || i} paper={p} />
         ))}
       </div>
     </div>
