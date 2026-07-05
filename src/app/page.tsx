@@ -123,13 +123,6 @@ export default function Home() {
                 <div className="w-full z-10 relative">
                   <ConsensusSearchInput onSendMessage={handleSubmit} isLoading={loading} />
                 </div>
-
-                {/* Tagline — langsung di bawah search bar */}
-                {!result && !loading && (
-                  <p className="text-sm text-gray-400 mt-4 text-center">
-                    Connected with 200M+ Paper Research Database
-                  </p>
-                )}
               </div>
 
               {/* Area bawah — loading / result / FAQ muncul di sini, push ke bawah */}
