@@ -6,13 +6,10 @@ import { Search, Plus, Filter, Mic, Sparkles, Activity, FileText, ArrowRight, Lo
    ============================================================ */
 const T = {
   surface: "#FFFFFF",
-  bg: "#F9FAFB", // Sangat light grey untuk luar sidebar
+  bg: "#F9FAFB",
   ink: "#111827",
   inkSoft: "#6B7280",
-  inkFaint: "#9CA3AF",
   border: "#E5E7EB",
-  accentBlue: "#3B82F6", 
-  accentTeal: "#14B8A6", 
 };
 
 interface ConsensusSearchInputProps {
@@ -33,7 +30,6 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    // Auto-resize textarea
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = "auto";
@@ -66,23 +62,21 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
     const hasContent = message.trim().length > 0;
 
     return (
-        <div className="w-full max-w-[800px] mx-auto flex flex-col items-center">
+        <div className="w-full max-w-[760px] mx-auto flex flex-col items-center">
             
-            {/* Header / Logo Besar */}
-            <div className="flex flex-col items-center mb-8 gap-3">
-                <h1 className="text-4xl font-bold tracking-tight" style={{ color: T.ink }}>Research starts here.</h1>
-            </div>
-
             {/* Main Search Box */}
-            <div className="w-full bg-white rounded-3xl border shadow-[0_2px_15px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:border-gray-300 flex flex-col pt-4 pb-2 px-4 relative z-10" style={{ borderColor: T.border }}>
+            <div className="w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:border-gray-300 flex flex-col pt-4 pb-2 px-4 relative z-10">
                 
-                {/* Filter Panel Dropdown (Absolute Positioning agar numpuk ke atas kalo dibuka) */}
+                {/* Filter Panel Dropdown (Absolute Positioning agar numpuk ke atas) */}
                 {showFilters && (
-                    <div className="absolute bottom-full left-0 mb-4 w-full p-5 bg-white border border-gray-200 rounded-2xl shadow-lg animate-fade-in z-50">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                            <Filter className="w-4 h-4" /> Advanced Filters
-                        </h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                    <div className="absolute bottom-full left-0 mb-3 w-full p-5 bg-white border border-gray-200 rounded-[20px] shadow-lg animate-fade-in z-50">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <Filter className="w-4 h-4" /> Filters
+                            </h3>
+                            <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Year From</label>
                                 <input type="number" value={yearFrom} onChange={e => setYearFrom(e.target.value ? Number(e.target.value) : "")} placeholder="e.g. 2018" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500" />
@@ -94,9 +88,9 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Language</label>
                                 <select value={lang} onChange={e => setLang(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white cursor-pointer">
-                                    <option value="both">Both (All)</option>
-                                    <option value="id">Indonesian Only</option>
-                                    <option value="en">English Only</option>
+                                    <option value="both">All</option>
+                                    <option value="id">Indonesian</option>
+                                    <option value="en">English</option>
                                 </select>
                             </div>
                             <div className="flex flex-col gap-1.5">
@@ -107,10 +101,6 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                                     <option value={50}>Top 50</option>
                                 </select>
                             </div>
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                            <input type="checkbox" id="scopus" checked={scopus} onChange={(e) => setScopus(e.target.checked)} className="w-4 h-4 text-teal-500 rounded border-gray-300" />
-                            <label htmlFor="scopus" className="text-sm text-gray-600 cursor-pointer select-none">Include Scopus Search (Slower)</label>
                         </div>
                     </div>
                 )}
@@ -123,7 +113,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     onKeyDown={handleKeyDown}
                     placeholder="Ask the research..."
                     disabled={isLoading}
-                    className="w-full bg-transparent border-0 outline-none text-[17px] text-gray-900 placeholder:text-gray-400 resize-none overflow-hidden leading-relaxed mb-3 pl-2"
+                    className="w-full bg-transparent border-0 outline-none text-[16px] text-gray-900 placeholder:text-gray-400 resize-none overflow-hidden leading-relaxed mb-3 pl-2"
                     rows={1}
                     autoFocus
                 />
@@ -133,7 +123,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     <div className="flex items-center gap-1.5">
                         <button 
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-sm font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-600 hover:bg-gray-100'}`}
+                            className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
                         >
                             <Filter className="w-4 h-4" /> Filter
                         </button>
@@ -142,23 +132,20 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     <button
                         onClick={handleSend}
                         disabled={!hasContent || isLoading}
-                        className={`w-10 h-10 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg' : 'bg-blue-100 text-blue-300'}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd]'}`}
                     >
-                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
                     </button>
                 </div>
             </div>
 
             {/* Suggested Actions (Pills) */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-                <button className="h-9 px-4 rounded-full bg-white border border-gray-200 text-[13px] font-medium text-gray-700 flex items-center gap-2 hover:bg-gray-50 shadow-sm transition-all">
-                    <Sparkles className="w-4 h-4 text-gray-500" /> Find studies by method
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+                <button className="h-8 px-4 rounded-full bg-white border border-gray-200 text-[12px] font-medium text-gray-600 flex items-center gap-1.5 hover:bg-gray-50 transition-all">
+                    <span className="text-gray-400 text-sm font-bold">TRY</span> <span className="text-gray-300">·</span> Hubungan CSR dengan profitabilitas ↑
                 </button>
-                <button className="h-9 px-4 rounded-full bg-white border border-gray-200 text-[13px] font-medium text-gray-700 flex items-center gap-2 hover:bg-gray-50 shadow-sm transition-all">
-                    <Sparkles className="w-4 h-4 text-blue-500" /> Run a Deep review
-                </button>
-                <button className="h-9 px-4 rounded-full bg-white border border-gray-200 text-[13px] font-medium text-gray-700 flex items-center gap-2 hover:bg-gray-50 shadow-sm transition-all">
-                    <Activity className="w-4 h-4 text-gray-500" /> How research has evolved
+                <button className="h-8 px-4 rounded-full bg-white border border-gray-200 text-[12px] font-medium text-gray-600 flex items-center gap-1.5 hover:bg-gray-50 transition-all">
+                    <span className="text-gray-400 text-sm font-bold">TRY</span> <span className="text-gray-300">·</span> Pengaruh E-WOM pada Gen Z ↑
                 </button>
             </div>
         </div>
