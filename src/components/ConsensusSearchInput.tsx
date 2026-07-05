@@ -27,7 +27,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
     const [yearTo, setYearTo] = useState<number | "">("");
     const [limit, setLimit] = useState<number>(10);
     const [lang, setLang] = useState<string>("both");
-    const [scopus, setScopus] = useState(false);
+    const [sources, setSources] = useState<string[]>(['openalex', 'semanticscholar', 'scopus']);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,7 +48,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
             minCited: 0,
             lang: lang,
             exclude: [],
-            scopus: scopus
+            sources: sources
         });
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
     };
@@ -63,7 +63,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
     const hasContent = message.trim().length > 0;
 
     return (
-        <div className="w-full max-w-[760px] mx-auto flex flex-col items-center">
+        <div className="w-full max-w-[760px] mx-auto flex flex-col items-center font-sans">
 
             <FilterSidebar
                 isOpen={showFilters}
@@ -73,7 +73,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     setYearTo(filters.yearTo || "");
                     setLimit(filters.limit);
                     setLang(filters.lang);
-                    // OpenAccess and citations are prepared but handled later in engine
+                    setSources(filters.sources || ['openalex', 'semanticscholar', 'scopus']);
                 }}
             />
 
@@ -98,7 +98,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     <div className="flex items-center gap-1.5">
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
+                            className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100 cursor-pointer'}`}
                         >
                             <Filter className="w-4 h-4" /> Filter
                         </button>
@@ -107,7 +107,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     <button
                         onClick={handleSend}
                         disabled={!hasContent || isLoading}
-                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd]'}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd] cursor-not-allowed'}`}
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
                     </button>
