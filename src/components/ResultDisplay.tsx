@@ -152,7 +152,19 @@ export default function ResultDisplay({ data }: Props) {
 
   // Filter papers based on clicked source pill
   const filteredPapers = activeSourceFilter
-    ? data.papers.filter((p: any) => p.sourceKey === activeSourceFilter)
+    ? data.papers.filter((p: any) => {
+        if (p.sourceKey) {
+          return p.sourceKey === activeSourceFilter;
+        }
+        // Fallback for cached results
+        const filterLower = activeSourceFilter.toLowerCase();
+        const paperSourceLower = (p.source || "").toLowerCase();
+        if (filterLower.includes("scopus") && paperSourceLower === "scopus") return true;
+        if (filterLower.includes("openalex") && paperSourceLower === "openalex") return true;
+        if (filterLower.includes("semanticscholar") && paperSourceLower === "semantic-scholar") return true;
+        if (filterLower.includes("semantic-scholar") && paperSourceLower === "semantic-scholar") return true;
+        return false;
+      })
     : data.papers.slice(0, 20); // Default to top 20 ranked papers
 
   return (
