@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Referensia — Temukan Jawaban dari Jurnal Ilmiah",
+  title: "Nemu Jurnal — Temukan Jawabanmu dari Jurnal Ilmiah",
   description: "Ditenagai AI, OpenAlex, Semantic Scholar, Crossref, dan Scopus.",
 };
 
