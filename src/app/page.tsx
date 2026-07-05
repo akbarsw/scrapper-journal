@@ -100,31 +100,38 @@ export default function Home() {
           </div>
         )}
 
-        <div className={`flex-1 w-full max-w-4xl mx-auto px-6 flex flex-col ${(!result && !loading && activeTab === "search") ? "justify-center pb-[10vh]" : "justify-start pt-[5vh] md:pt-[10vh]"}`}>
+        {/* Wrapper utama — search box SELALU di tengah vertikal, result scroll di bawahnya */}
+        <div className="flex-1 w-full max-w-4xl mx-auto px-6 flex flex-col">
 
           {/* Main Search View */}
           {activeTab === "search" && (
             <>
-              {!result && !loading && (
-                <div className="flex flex-col items-center mb-6 gap-3 mt-10">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-lg leading-none">N</div>
-                    <span className="text-xl font-bold tracking-tight text-gray-900">Nemu Jurnal</span>
+              {/* Area tengah — search box + header selalu terpaku di tengah layar */}
+              <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                {/* Header — hilang setelah ada result */}
+                {!result && !loading && (
+                  <div className="flex flex-col items-center mb-6 gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-lg leading-none">N</div>
+                      <span className="text-xl font-bold tracking-tight text-gray-900">Nemu Jurnal</span>
+                    </div>
+                    <h1 className="text-[28px] font-medium tracking-tight text-gray-900">Tanya dan temukan jurnalmu disini</h1>
+                    {!user && (
+                      <p className="text-sm text-gray-400 mt-1">
+                        Temukan jurnal ilmiah dari ribuan sumber · Gratis untuk semua peneliti
+                      </p>
+                    )}
                   </div>
-                  <h1 className="text-[28px] font-medium tracking-tight text-gray-900">Tanya dan temukan jurnalmu disini</h1>
-                  {!user && (
-                    <p className="text-sm text-gray-400 mt-1">
-                      Temukan jurnal ilmiah dari ribuan sumber · Gratis untuk semua peneliti
-                    </p>
-                  )}
-                </div>
-              )}
+                )}
 
-              <div className="w-full z-10 relative">
-                <ConsensusSearchInput onSendMessage={handleSubmit} isLoading={loading} />
+                {/* Search box — selalu ada, tidak kemana-mana */}
+                <div className="w-full z-10 relative">
+                  <ConsensusSearchInput onSendMessage={handleSubmit} isLoading={loading} />
+                </div>
               </div>
 
-              <div className="w-full mt-8">
+              {/* Area bawah — loading / result / FAQ muncul di sini, push ke bawah */}
+              <div className="w-full pb-10">
                 {loading && (
                   <div className="text-center py-12 space-y-4">
                     <div className="inline-block w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -137,8 +144,13 @@ export default function Home() {
                     <p className="text-red-600 text-sm">❌ {error}</p>
                   </div>
                 )}
-                {/* FAQ — hanya muncul di halaman kosong sebelum pencarian */}
                 {!result && !loading && !error && <FAQ />}
+                {!result && !loading && activeTab === "search" && (
+                  <div className="w-full text-center py-6">
+                    <div className="w-6 h-[2px] bg-gray-200 mx-auto mb-3"></div>
+                    <p className="text-gray-400 text-sm font-medium">Connected with 200M+ Paper Research Database</p>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -239,12 +251,6 @@ export default function Home() {
 
         </div>
 
-        {!result && !loading && activeTab === "search" && (
-          <div className="w-full text-center py-6">
-            <div className="w-6 h-[2px] bg-gray-200 mx-auto mb-3"></div>
-            <p className="text-gray-400 text-sm font-medium">Connected with 200M+ Paper Research Database</p>
-          </div>
-        )}
       </main>
     </div>
   );
