@@ -78,7 +78,7 @@ export default function Home() {
         {user && !sidebarOpen && (
           <button
             onClick={() => useAppStore.getState().setSidebarOpen(true)}
-            className="absolute top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 flex items-center justify-center transition-all"
+            className="absolute top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 flex items-center justify-center transition-all cursor-pointer"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-600">
               <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -93,7 +93,7 @@ export default function Home() {
           <div className="absolute top-5 right-6 z-50">
             <button
               onClick={() => router.push("/login")}
-              className="px-4 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-all"
+              className="px-4 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-all cursor-pointer"
             >
               Masuk
             </button>
@@ -111,9 +111,9 @@ export default function Home() {
                 {/* Header — hilang setelah ada result */}
                 {!result && !loading && (
                   <div className="flex flex-col items-center mb-6 gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-lg leading-none">N</div>
-                      <span className="text-xl font-bold tracking-tight text-gray-900">Nemu Jurnal</span>
+                    <div className="flex items-center">
+                      <div className="w-[22px] h-[22px] rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-[13px] leading-none mr-0.5 shadow-sm">N</div>
+                      <span className="text-xl font-bold tracking-tight text-gray-900">emu Jurnal</span>
                     </div>
                     <h1 className="text-[28px] font-medium tracking-tight text-gray-700">Temukan referensi jurnalmu disini</h1>
                   </div>
@@ -127,21 +127,21 @@ export default function Home() {
                 {/* Claude-style suggestion pills — di ATAS tagline */}
                 {!result && !loading && (
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                       Tulis
                     </button>
-                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                       Learn
                     </button>
-                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
                       Life stuff
                     </button>
                     <button 
                       onClick={() => { const el = document.getElementById('faq-section'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                       FAQ
@@ -194,7 +194,7 @@ export default function Home() {
                     <div key={paper.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative group">
                       <button
                         onClick={() => removePaper(paper.paper_id)}
-                        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                        className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                         title="Hapus dari Library"
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -206,7 +206,7 @@ export default function Home() {
                       <div className="mt-4 flex items-center justify-between">
                         <span className="text-xs text-gray-400 font-medium">{new Date(paper.created_at).toLocaleDateString()}</span>
                         {paper.url && (
-                          <a href={paper.url} target="_blank" rel="noreferrer" className="text-teal-600 hover:text-teal-700 text-sm font-semibold flex items-center gap-1">
+                          <a href={paper.url} target="_blank" rel="noreferrer" className="text-teal-600 hover:text-teal-700 text-sm font-semibold flex items-center gap-1 cursor-pointer">
                             Buka Jurnal
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                           </a>
@@ -245,7 +245,7 @@ export default function Home() {
                         }
                         handleSubmit({ vars: queryText });
                       }}
-                      className="w-full text-left bg-white p-4 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all flex items-center justify-between group"
+                      className="w-full text-left bg-white p-4 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all flex items-center justify-between group cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
