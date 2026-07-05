@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, Plus, Filter, Mic, Sparkles, Activity, FileText, ArrowRight, Loader2, ChevronDown } from "lucide-react";
+import { FilterSidebar } from "./FilterSidebar";
 
 /* ============================================================
    TOKENS — Warna Spesifik Consensus
@@ -64,47 +65,21 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
     return (
         <div className="w-full max-w-[760px] mx-auto flex flex-col items-center">
             
+            <FilterSidebar 
+                isOpen={showFilters} 
+                onClose={() => setShowFilters(false)}
+                onApply={(filters) => {
+                    setYearFrom(filters.yearFrom || "");
+                    setYearTo(filters.yearTo || "");
+                    setLimit(filters.limit);
+                    setLang(filters.lang);
+                    // OpenAccess and citations are prepared but handled later in engine
+                }}
+            />
+
             {/* Main Search Box */}
             <div className="w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:border-gray-300 flex flex-col pt-4 pb-2 px-4 relative z-10">
                 
-                {/* Filter Panel Dropdown (Absolute Positioning agar numpuk ke atas) */}
-                {showFilters && (
-                    <div className="absolute bottom-full left-0 mb-3 w-full p-5 bg-white border border-gray-200 rounded-[20px] shadow-lg animate-fade-in z-50">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                <Filter className="w-4 h-4" /> Filters
-                            </h3>
-                            <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Year From</label>
-                                <input type="number" value={yearFrom} onChange={e => setYearFrom(e.target.value ? Number(e.target.value) : "")} placeholder="e.g. 2018" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500" />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Year To</label>
-                                <input type="number" value={yearTo} onChange={e => setYearTo(e.target.value ? Number(e.target.value) : "")} placeholder="e.g. 2024" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500" />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Language</label>
-                                <select value={lang} onChange={e => setLang(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white cursor-pointer">
-                                    <option value="both">All</option>
-                                    <option value="id">Indonesian</option>
-                                    <option value="en">English</option>
-                                </select>
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">Results</label>
-                                <select value={limit} onChange={e => setLimit(Number(e.target.value))} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white cursor-pointer">
-                                    <option value={10}>Top 10</option>
-                                    <option value={20}>Top 20</option>
-                                    <option value={50}>Top 50</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* Text Area */}
                 <textarea
                     ref={textareaRef}
