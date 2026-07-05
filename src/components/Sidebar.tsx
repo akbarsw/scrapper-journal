@@ -56,18 +56,8 @@ export const Sidebar = ({ user }: { user: any }) => {
           </button>
 
           <div className="mt-8 mb-2 px-3 text-xs font-semibold text-gray-400">Tools</div>
-          <button 
-             onClick={() => setActiveTab('search')}
-             className={`w-full flex items-center gap-3 px-3 py-2 text-[14px] font-semibold rounded-lg transition-colors ${activeTab === 'search' ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-100'}`}
-          >
+          <button className="w-full flex items-center gap-3 px-3 py-2 text-[14px] font-semibold text-teal-700 rounded-lg bg-teal-50">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Paper search
-          </button>
-          
-          <button 
-             onClick={() => setActiveTab('dna_analyzer')}
-             className={`w-full flex items-center gap-3 px-3 py-2 text-[14px] font-semibold rounded-lg transition-colors ${activeTab === 'dna_analyzer' ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-100'}`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m8 8-.5.5M11 5l-3 3M16 16l-.5.5M19 13l-3 3M16 8l-3 3M13 11l-3 3M13 5a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V8a3 3 0 0 0-3-3Z"/></svg> DNA/RNA/Protein
           </button>
         </div>
 
