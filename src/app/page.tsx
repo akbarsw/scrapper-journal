@@ -147,12 +147,6 @@ export default function Home() {
                   </div>
                 )}
                 {!result && !loading && !error && <FAQ />}
-                {!result && !loading && activeTab === "search" && (
-                  <div className="w-full text-center py-6">
-                    <div className="w-6 h-[2px] bg-gray-200 mx-auto mb-3"></div>
-                    <p className="text-gray-400 text-sm font-medium">Connected with 200M+ Paper Research Database</p>
-                  </div>
-                )}
               </div>
             </>
           )}
