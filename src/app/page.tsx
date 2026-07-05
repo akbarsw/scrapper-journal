@@ -8,6 +8,8 @@ import ResultDisplay from "@/components/ResultDisplay";
 import { Sidebar } from "@/components/Sidebar";
 import { useAppStore } from "@/lib/store";
 import FAQ from "@/components/FAQ";
+import BioAnalyzer from "@/components/BioAnalyzer";
+import { Trash2, Search, Dna } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -15,8 +17,23 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // History tab selector
+  const [historyTab, setHistoryTab] = useState<'search' | 'tools'>('search');
 
-  const { sidebarOpen, activeTab, loadLocalData, saveHistory, savedPapers, removePaper } = useAppStore();
+  const { 
+    sidebarOpen, 
+    activeTab, 
+    setActiveTab, 
+    loadLocalData, 
+    saveHistory, 
+    savedPapers, 
+    removePaper,
+    history,
+    toolHistory,
+    setAnalyzerSequence,
+    deleteHistoryItem
+  } = useAppStore();
 
   // Cek session tapi JANGAN redirect. Simpan user kalau ada, null kalau tidak.
   useEffect(() => {
@@ -221,52 +238,150 @@ export default function Home() {
 
           {/* History View */}
           {activeTab === "history" && (
-            <div className="w-full pt-10">
-              <h1 className="text-3xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                Search History
-              </h1>
-              {useAppStore.getState().history.length === 0 ? (
-                <div className="text-center py-20 bg-gray-50 rounded-2xl border border-gray-100">
-                  <p className="text-gray-500 font-medium">Belum ada riwayat pencarian.</p>
+            <div className="w-full pt-10 pb-20">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Riwayat Aktivitas
+                </h1>
+                
+                {/* Segemented Tab Control inside History */}
+                <div className="inline-flex bg-gray-100 p-1 rounded-xl self-start md:self-auto">
+                  <button
+                    onClick={() => setHistoryTab('search')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      historyTab === 'search' 
+                        ? 'bg-white text-gray-900 shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    Pencarian Jurnal
+                  </button>
+                  <button
+                    onClick={() => setHistoryTab('tools')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                      historyTab === 'tools' 
+                        ? 'bg-white text-gray-900 shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    <Dna className="w-3.5 h-3.5" />
+                    Riwayat Tools
+                  </button>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {useAppStore.getState().history.map((item: any) => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        let queryText = "";
-                        try {
-                          const queryObj = typeof item.query === "string" ? JSON.parse(item.query) : item.query;
-                          queryText = queryObj.vars || queryObj.query || queryObj;
-                        } catch (e) {
-                          queryText = item.query;
-                        }
-                        handleSubmit({ vars: queryText });
-                      }}
-                      className="w-full text-left bg-white p-4 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        </div>
-                        <span className="font-medium text-gray-900">
-                          {(() => {
+              </div>
+
+              {/* Sub-tab 1: Search History */}
+              {historyTab === 'search' && (
+                history.length === 0 ? (
+                  <div className="text-center py-20 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-gray-500 font-medium">Belum ada riwayat pencarian.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {history.map((item: any) => (
+                      <div 
+                        key={item.id} 
+                        className="w-full bg-white p-4 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all flex items-center justify-between group"
+                      >
+                        <button
+                          onClick={() => {
+                            let queryText = "";
                             try {
-                              const obj = typeof item.query === "string" ? JSON.parse(item.query) : item.query;
-                              return obj.vars || obj.query || item.query;
+                              const queryObj = typeof item.query === "string" ? JSON.parse(item.query) : item.query;
+                              queryText = queryObj.vars || queryObj.query || queryObj;
                             } catch (e) {
-                              return item.query;
+                              queryText = item.query;
                             }
-                          })()}
-                        </span>
+                            handleSubmit({ vars: queryText });
+                          }}
+                          className="flex-1 text-left flex items-center gap-3"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
+                            <Search className="w-4 h-4" />
+                          </div>
+                          <span className="font-medium text-gray-900">
+                            {(() => {
+                              try {
+                                const obj = typeof item.query === "string" ? JSON.parse(item.query) : item.query;
+                                return obj.vars || obj.query || item.query;
+                              } catch (e) {
+                                return item.query;
+                              }
+                            })()}
+                          </span>
+                        </button>
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</span>
+                          <button
+                            onClick={() => deleteHistoryItem(item.id, 'search')}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</span>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )
               )}
+
+              {/* Sub-tab 2: Tool History */}
+              {historyTab === 'tools' && (
+                toolHistory.length === 0 ? (
+                  <div className="text-center py-20 bg-gray-50 rounded-2xl border border-gray-100">
+                    <p className="text-gray-500 font-medium">Belum ada riwayat aktivitas tools.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {toolHistory.map((item: any) => (
+                      <div 
+                        key={item.id} 
+                        className="w-full bg-white p-4 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all flex items-center justify-between group"
+                      >
+                        <button
+                          onClick={() => {
+                            setAnalyzerSequence(item.sequenceName, item.sequenceData);
+                            setActiveTab('dna_analyzer');
+                          }}
+                          className="flex-1 text-left flex items-center gap-3"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
+                            <Dna className="w-4 h-4" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900 text-sm">
+                              {item.sequenceName}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {item.toolName} • <span className="font-bold text-teal-600">{item.sequenceType}</span> ({item.sequenceLength} {item.sequenceType === 'Protein' ? 'aa' : 'bp'})
+                            </span>
+                          </div>
+                        </button>
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</span>
+                          <button
+                            onClick={() => deleteHistoryItem(item.id, 'tool')}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+          )}
+
+          {/* DNA/RNA/Protein Analyzer View */}
+          {activeTab === "dna_analyzer" && (
+            <div className="w-full">
+              <BioAnalyzer />
             </div>
           )}
 
