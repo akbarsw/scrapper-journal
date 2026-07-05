@@ -7,6 +7,7 @@ import ConsensusSearchInput from "@/components/ConsensusSearchInput";
 import ResultDisplay from "@/components/ResultDisplay";
 import { Sidebar } from "@/components/Sidebar";
 import { useAppStore } from "@/lib/store";
+import FAQ from "@/components/FAQ";
 
 export default function Home() {
   const router = useRouter();
@@ -136,6 +137,8 @@ export default function Home() {
                     <p className="text-red-600 text-sm">❌ {error}</p>
                   </div>
                 )}
+                {/* FAQ — hanya muncul di halaman kosong sebelum pencarian */}
+                {!result && !loading && !error && <FAQ />}
               </div>
             </>
           )}
