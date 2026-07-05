@@ -240,9 +240,9 @@ export default function Home() {
         </div>
 
         {!result && !loading && activeTab === "search" && (
-          <div className="absolute bottom-6 w-full text-center">
+          <div className="w-full text-center py-6">
             <div className="w-6 h-[2px] bg-gray-200 mx-auto mb-3"></div>
-            <p className="text-gray-400 text-sm font-medium">Didukung OpenAlex · Semantic Scholar · Scopus · 2024</p>
+            <p className="text-gray-400 text-sm font-medium">Connected with 200M+ Paper Research Database</p>
           </div>
         )}
       </main>
