@@ -70,12 +70,6 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
             
             {/* Header / Logo Besar */}
             <div className="flex flex-col items-center mb-8 gap-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-teal-500 text-white font-serif font-bold text-xl leading-none">
-                        S
-                    </div>
-                    <span className="text-2xl font-serif tracking-tight" style={{ color: T.ink }}>ScrapJurnal</span>
-                </div>
                 <h1 className="text-4xl font-bold tracking-tight" style={{ color: T.ink }}>Research starts here.</h1>
             </div>
 
