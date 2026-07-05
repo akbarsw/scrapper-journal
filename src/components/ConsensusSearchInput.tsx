@@ -95,7 +95,6 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                         strokeWidth="1.2"
                         strokeDasharray="180 2000"
                         className="animate-border-flow"
-                        style={{ animationDelay: '0.16s' }}
                     />
                     {/* Body Layer (Medium Zinc) */}
                     <rect
@@ -125,6 +124,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                         strokeWidth="1.4"
                         strokeDasharray="40 2000"
                         className="animate-border-flow"
+                        style={{ animationDelay: '0.16s' }}
                     />
                 </svg>
 
