@@ -30,7 +30,7 @@ export async function generateKeywords(query: string): Promise<ExtractedIntent> 
   }
 
   const payload = {
-    model: "ag/gemini-3.1-pro-low",
+    model: "openmodel/deepseek-v4-flash",
     stream: false,
     messages: [
       {
@@ -122,7 +122,7 @@ export async function rerankPapers(query: string, candidates: {id: string, title
   if (!apiKey) return limitCandidates.map(c => c.id);
 
   const payload = {
-    model: "ag/gemini-3.1-pro-low",
+    model: "openmodel/deepseek-v4-flash",
     messages: [
       {
         role: "system",
