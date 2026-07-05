@@ -73,11 +73,10 @@ export default function Home() {
 
   return (
     <>
-      <Header />
-      <main className="flex-1 w-full mx-auto px-4 py-8 font-sans bg-gray-50/30 min-h-screen">
+      <main className="flex-1 w-full mx-auto px-4 py-20 font-sans bg-white min-h-screen">
         
         {/* Chat Input UI Consensus Style */}
-        <div className="mt-8 mb-12">
+        <div className="mb-12">
             <ConsensusSearchInput onSendMessage={handleSubmit} isLoading={loading} />
         </div>
 
@@ -97,18 +96,8 @@ export default function Home() {
                 <p className="text-red-600 font-medium">❌ {error}</p>
               </div>
             )}
-            
-            {!loading && !result && !error && (
-               <div className="bg-white border rounded-2xl p-6 shadow-sm">
-                 <h3 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">Recent Searches</h3>
-                 <History refreshKey={refreshKey} />
-               </div>
-            )}
         </div>
       </main>
-      <footer className="text-center py-8 text-zinc-400 text-sm">
-        The new standard for academic research
-      </footer>
     </>
   );
 }
