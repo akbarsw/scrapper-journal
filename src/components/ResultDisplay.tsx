@@ -49,25 +49,18 @@ function ResultCard({ paper }: { paper: any }) {
       {/* Badge row */}
       <div className="flex items-center gap-2 mb-2.5 flex-wrap">
         <span
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium"
-          style={{ background: T.accentSoft, color: T.accent }}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider"
+          style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" }}
         >
-          {paper.source}
+          {paper.source === "scopus" ? "Scopus" : (paper.source === "semantic-scholar" ? "SemanticScholar" : (paper.source === "openalex" ? "OpenAlex" : paper.source))}
         </span>
-        <span className="inline-flex items-center gap-1 text-[10.5px]" style={{ color: T.inkFaint }}>
-          <Calendar className="w-3 h-3" /> {paper.year}
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: T.inkSoft }}>
+          <Calendar className="w-3.5 h-3.5" /> {paper.year}
         </span>
-        <span className="inline-flex items-center gap-1 text-[10.5px]" style={{ color: T.inkFaint }}>
-          {paper.doi ? <Globe2 className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium" style={{ color: T.inkSoft }}>
+          {paper.doi ? <Globe2 className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
           {paper.doi ? "Available" : "Limited"}
         </span>
-        {/*
-        <span
-          className="ml-auto w-2 h-2 rounded-full"
-          style={{ background: stanceColor }}
-          title={mockStance}
-        />
-        */}
       </div>
 
       {/* Title */}
@@ -125,20 +118,20 @@ export default function ResultDisplay({ data }: Props) {
     <div className="space-y-4 font-sans" style={{ background: T.paper, padding: '16px', borderRadius: '16px' }}>
       
       {/* 1. STATUS HEADER */}
-      <div className="flex items-center justify-between px-2 mb-2">
-         <div className="flex items-center gap-2">
-           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: T.accent }}>
-              <Sparkles className="w-4 h-4 text-white" />
+      <div className="flex items-center justify-between px-2 mb-4 bg-teal-50/50 p-4 rounded-xl border border-teal-100">
+         <div className="flex items-center gap-3">
+           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-700 shadow-sm">
+              <Sparkles className="w-5 h-5 text-white" />
            </div>
            <div>
-             <h3 className="font-semibold text-sm" style={{ color: T.ink }}>Referensia Found {data.total} Results</h3>
-             <p className="text-[11px]" style={{ color: T.inkFaint }}>Found in {data.time / 1000}s from {data.sources.filter(s => s.count > 0).length} sources</p>
+             <h3 className="font-bold text-[15px] text-gray-900 tracking-tight">Referensia Found {data.total} Results</h3>
+             <p className="text-[12px] text-gray-500 mt-0.5">Found in {data.time / 1000}s from {data.sources.filter(s => s.count > 0).length} sources</p>
            </div>
          </div>
-         <div className="flex gap-1 text-[10px]">
+         <div className="flex gap-1.5 text-[11px] font-medium">
            {data.sources.map((s) => (
-             <span key={s.name} className={`px-2 py-0.5 rounded-full border ${s.count > 0 ? 'bg-white border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
-               {s.name}
+             <span key={s.name} className={`px-2.5 py-1 rounded-full border ${s.count > 0 ? 'bg-white border-teal-200 text-teal-700 shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-400'}`}>
+               {s.name} ({s.count > 0 ? 'Id' : '0'})
              </span>
            ))}
          </div>
