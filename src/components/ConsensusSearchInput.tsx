@@ -131,29 +131,11 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                 {/* Bottom Row Tools */}
                 <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-1.5">
-                        <button className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors">
-                            <Plus className="w-5 h-5" />
-                        </button>
-                        
-                        <div className="h-4 w-[1px] bg-gray-200 mx-1"></div>
-                        
-                        <button className="h-9 px-3 flex items-center gap-1.5 rounded-full text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">
-                            Corpus <ChevronDown className="w-3.5 h-3.5" />
-                        </button>
-
-                        <button className="h-9 px-3 flex items-center gap-1.5 rounded-full text-sm font-medium text-blue-600 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors ml-1">
-                            <Sparkles className="w-4 h-4 text-blue-500" /> Deep +
-                        </button>
-
                         <button 
                             onClick={() => setShowFilters(!showFilters)}
                             className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-sm font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-600 hover:bg-gray-100'}`}
                         >
                             <Filter className="w-4 h-4" /> Filter
-                        </button>
-                        
-                        <button className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors ml-1">
-                            <Mic className="w-4 h-4" />
                         </button>
                     </div>
 
