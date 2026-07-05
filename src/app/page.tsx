@@ -113,7 +113,7 @@ export default function Home() {
                   <h1 className="text-[28px] font-medium tracking-tight text-gray-900">Tanya dan temukan jurnalmu disini</h1>
                   {!user && (
                     <p className="text-sm text-gray-400 mt-1">
-                      Ketik pertanyaan riset kamu · Login otomatis diminta saat mulai mencari
+                      Temukan jurnal ilmiah dari ribuan sumber · Gratis untuk semua peneliti
                     </p>
                   )}
                 </div>
@@ -239,7 +239,7 @@ export default function Home() {
         {!result && !loading && activeTab === "search" && (
           <div className="absolute bottom-6 w-full text-center">
             <div className="w-6 h-[2px] bg-gray-200 mx-auto mb-3"></div>
-            <p className="text-gray-400 text-sm font-medium">The new standard for academic research</p>
+            <p className="text-gray-400 text-sm font-medium">Didukung OpenAlex · Semantic Scholar · Scopus · 2024</p>
           </div>
         )}
       </main>
