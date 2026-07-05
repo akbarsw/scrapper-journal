@@ -15,6 +15,7 @@ export interface SearchParams {
   lang?: string;
   exclude?: string;
   scopus?: boolean;
+  sources?: string[];
 }
 
 function normalizeDoi(doi: string): string {
@@ -142,18 +143,26 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   
   // Tembak Inggris
   if (apiQueryEn.length > 3) {
-    sources.push(openalex(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
-    sources.push(semanticscholar(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
-    if (params.scopus) {
+    if (!params.sources || params.sources.includes("openalex")) {
+      sources.push(openalex(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
+    if (!params.sources || params.sources.includes("semanticscholar")) {
+      sources.push(semanticscholar(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
+    if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       sources.push(scopus(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
   }
   
   // Tembak Indo
   if (apiQueryId.length > 3) {
-    sources.push(openalex(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
-    sources.push(semanticscholar(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
-    if (params.scopus) {
+    if (!params.sources || params.sources.includes("openalex")) {
+      sources.push(openalex(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
+    if (!params.sources || params.sources.includes("semanticscholar")) {
+      sources.push(semanticscholar(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
+    if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       sources.push(scopus(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
   }
@@ -164,14 +173,16 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
 
   const sourceNames: string[] = [];
   if (apiQueryEn.length > 3) {
-    sourceNames.push("OpenAlex (En)", "SemanticScholar (En)");
-    if (params.scopus) {
+    if (!params.sources || params.sources.includes("openalex")) sourceNames.push("OpenAlex (En)");
+    if (!params.sources || params.sources.includes("semanticscholar")) sourceNames.push("SemanticScholar (En)");
+    if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       sourceNames.push("Scopus (En)");
     }
   }
   if (apiQueryId.length > 3) {
-    sourceNames.push("OpenAlex (Id)", "SemanticScholar (Id)");
-    if (params.scopus) {
+    if (!params.sources || params.sources.includes("openalex")) sourceNames.push("OpenAlex (Id)");
+    if (!params.sources || params.sources.includes("semanticscholar")) sourceNames.push("SemanticScholar (Id)");
+    if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       sourceNames.push("Scopus (Id)");
     }
   }

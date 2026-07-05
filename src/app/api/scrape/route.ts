@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       lang: body.lang || "both",
       exclude: body.exclude || undefined,
       scopus: body.scopus ?? true,
+      sources: body.sources || undefined,
     };
 
     if (!params.vars.trim()) {
