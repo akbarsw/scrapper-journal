@@ -151,7 +151,7 @@ export default function Home() {
 
                 {/* Tagline — di BAWAH pills */}
                 {!result && !loading && (
-                  <p className="text-sm text-gray-400 mt-4 text-center">
+                  <p className="text-sm text-gray-700 mt-4 text-center">
                     Connected with 200M+ Paper Research Database
                   </p>
                 )}
