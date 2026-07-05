@@ -183,8 +183,14 @@ export default function Home() {
                       <button 
                         key={item.id} 
                         onClick={() => {
-                          const queryObj = typeof item.query === 'string' ? JSON.parse(item.query) : item.query;
-                          handleSubmit({ vars: queryObj.vars || queryObj.query || "" });
+                          let queryText = "";
+                          try {
+                            const queryObj = typeof item.query === 'string' ? JSON.parse(item.query) : item.query;
+                            queryText = queryObj.vars || queryObj.query || queryObj;
+                          } catch(e) {
+                            queryText = item.query;
+                          }
+                          handleSubmit({ vars: queryText });
                         }}
                         className="w-full text-left bg-white p-4 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-sm transition-all flex items-center justify-between group"
                       >
@@ -193,7 +199,14 @@ export default function Home() {
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                           </div>
                           <span className="font-medium text-gray-900">
-                            {typeof item.query === 'string' ? (JSON.parse(item.query).vars || JSON.parse(item.query).query) : (item.query?.vars || "Unknown query")}
+                            {(() => {
+                              try {
+                                const obj = typeof item.query === 'string' ? JSON.parse(item.query) : item.query;
+                                return obj.vars || obj.query || item.query;
+                              } catch(e) {
+                                return item.query;
+                              }
+                            })()}
                           </span>
                         </div>
                         <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString()}</span>
