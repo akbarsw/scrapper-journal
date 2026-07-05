@@ -21,7 +21,7 @@ interface ConsensusSearchInputProps {
 export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSendMessage, isLoading }) => {
     const [message, setMessage] = useState("");
     const [showFilters, setShowFilters] = useState(false);
-    
+
     // State Filter ScrapJurnal
     const [yearFrom, setYearFrom] = useState<number | "">("");
     const [yearTo, setYearTo] = useState<number | "">("");
@@ -64,9 +64,9 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
 
     return (
         <div className="w-full max-w-[760px] mx-auto flex flex-col items-center">
-            
-            <FilterSidebar 
-                isOpen={showFilters} 
+
+            <FilterSidebar
+                isOpen={showFilters}
                 onClose={() => setShowFilters(false)}
                 onApply={(filters) => {
                     setYearFrom(filters.yearFrom || "");
@@ -77,40 +77,47 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                 }}
             />
 
-            {/* Main Search Box */}
-            <div className="w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:shadow-[0_4px_16px_rgba(0,0,0,0.06)] focus-within:border-gray-300 flex flex-col pt-4 pb-2 px-4 relative z-10">
+            {/* Main Search Box Wrapper for Animated Gradient Border */}
+            <div className="relative w-full p-[1.5px] rounded-[25px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-10">
                 
-                {/* Text Area */}
-                <textarea
-                    ref={textareaRef}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask the research..."
-                    disabled={isLoading}
-                    className="w-full bg-transparent border-0 outline-none text-[16px] text-gray-900 placeholder:text-gray-400 resize-none overflow-hidden leading-relaxed mb-3 pl-2"
-                    rows={1}
-                    autoFocus
-                />
+                {/* Animated Border Background (Metallic Conic Gradient) */}
+                <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,#000000_0%,#3f3f46_30%,#e4e4e7_50%,#3f3f46_70%,#000000_100%)] animate-[spin_8s_linear_infinite] opacity-95" />
                 
-                {/* Bottom Row Tools */}
-                <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center gap-1.5">
-                        <button 
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
+                {/* Inner Search Box Card */}
+                <div className="relative w-full bg-white rounded-[23.5px] flex flex-col pt-4 pb-2 px-4 z-10">
+                    
+                    {/* Text Area */}
+                    <textarea
+                        ref={textareaRef}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Ask the research..."
+                        disabled={isLoading}
+                        className="w-full bg-transparent border-0 outline-none text-[16px] text-gray-900 placeholder:text-gray-400 resize-none overflow-hidden leading-relaxed mb-3 pl-2"
+                        rows={1}
+                        autoFocus
+                    />
+                    
+                    {/* Bottom Row Tools */}
+                    <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-1.5">
+                            <button 
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
+                            >
+                                <Filter className="w-4 h-4" /> Filter
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={handleSend}
+                            disabled={!hasContent || isLoading}
+                            className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd]'}`}
                         >
-                            <Filter className="w-4 h-4" /> Filter
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
                         </button>
                     </div>
-
-                    <button
-                        onClick={handleSend}
-                        disabled={!hasContent || isLoading}
-                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd]'}`}
-                    >
-                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
-                    </button>
                 </div>
             </div>
 
