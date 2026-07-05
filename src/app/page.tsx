@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
-import ScrapeForm from "@/components/ScrapeForm";
+import ClaudeChatInput from "@/components/ClaudeChatInput";
 import ResultDisplay from "@/components/ResultDisplay";
 import History from "@/components/History";
 
@@ -74,13 +74,16 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <ScrapeForm onSubmit={handleSubmit} disabled={loading} />
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 space-y-8 font-sans">
+        
+        {/* Chat Input UI Baru */}
+        <ClaudeChatInput onSendMessage={handleSubmit} isLoading={loading} />
+
         {loading && (
           <div className="text-center py-12 space-y-4">
-            <div className="inline-block w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            <p className="text-zinc-600 text-lg">Mencari artikel ke 4 database...</p>
-            <p className="text-zinc-400 text-sm">Estimasi ±3-15 detik</p>
+            <div className="inline-block w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin" />
+            <p className="text-zinc-600 text-lg">AI is extracting intent & scanning 4 databases...</p>
+            <p className="text-zinc-400 text-sm">Takes ±5-12 seconds</p>
           </div>
         )}
         {result && <ResultDisplay data={result} />}
@@ -89,11 +92,15 @@ export default function Home() {
             <p className="text-red-600 font-medium">❌ {error}</p>
           </div>
         )}
-        {!loading && !result && !error && <History refreshKey={refreshKey} />}
+        {!loading && !result && !error && (
+           <div className="bg-white border rounded-xl p-6 shadow-sm">
+             <h3 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">Recent Searches</h3>
+             <History refreshKey={refreshKey} />
+           </div>
+        )}
       </main>
       <footer className="text-center py-6 text-zinc-400 text-sm border-t">
-        ScrapJurnal v1.0 &mdash; Built for academic research &middot;
-        <a href="https://saweria.co/yourlink" target="_blank" className="text-blue-600 hover:underline ml-1">Donate</a>
+        ScrapJurnal AI v3.0 &mdash; Intelligent Academic Discovery
       </footer>
     </>
   );
