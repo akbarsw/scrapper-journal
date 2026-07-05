@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ScrapJurnal — Scraping Jurnal Akademik Gratis",
-  description: "Cari dan filter artikel jurnal akademik dari OpenAlex, Semantic Scholar, Scopus, dan Crossref. Gratis, cepat, tinggal input variabel penelitian.",
+  title: "Referensia — Temukan Jawaban dari Jurnal Ilmiah",
+  description: "Ditenagai AI, OpenAlex, Semantic Scholar, Crossref, dan Scopus.",
 };
 
 export default function RootLayout({

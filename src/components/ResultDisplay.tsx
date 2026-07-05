@@ -130,7 +130,7 @@ export default function ResultDisplay({ data }: Props) {
               <Sparkles className="w-4 h-4 text-white" />
            </div>
            <div>
-             <h3 className="font-semibold text-sm" style={{ color: T.ink }}>ScrapJurnal AI Found {data.total} Results</h3>
+             <h3 className="font-semibold text-sm" style={{ color: T.ink }}>Referensia Found {data.total} Results</h3>
              <p className="text-[11px]" style={{ color: T.inkFaint }}>Found in {data.time / 1000}s from {data.sources.filter(s => s.count > 0).length} sources</p>
            </div>
          </div>
