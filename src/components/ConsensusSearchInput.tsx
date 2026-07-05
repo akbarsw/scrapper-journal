@@ -78,14 +78,14 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
             />
 
             {/* Main Search Box Wrapper for Animated Gradient Border */}
-            <div className="relative w-full p-[1.5px] rounded-[25px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-10">
-                
-                {/* Animated Border Background (Metallic Conic Gradient) */}
-                <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,#000000_0%,#3f3f46_30%,#e4e4e7_50%,#3f3f46_70%,#000000_100%)] animate-[spin_8s_linear_infinite] opacity-95" />
-                
+            <div className="relative w-full p-[1.2px] rounded-[25px] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-10">
+
+                {/* Animated Border Background (Spinning Black Comet Trail) */}
+                <div className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_60%,#71717a_85%,#09090b_98%,transparent_100%)] animate-[spin_4s_linear_infinite] opacity-95" />
+
                 {/* Inner Search Box Card */}
-                <div className="relative w-full bg-white rounded-[23.5px] flex flex-col pt-4 pb-2 px-4 z-10">
-                    
+                <div className="relative w-full bg-white rounded-[24px] flex flex-col pt-4 pb-2 px-4 z-10">
+
                     {/* Text Area */}
                     <textarea
                         ref={textareaRef}
@@ -98,11 +98,11 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                         rows={1}
                         autoFocus
                     />
-                    
+
                     {/* Bottom Row Tools */}
                     <div className="flex items-center justify-between mt-1">
                         <div className="flex items-center gap-1.5">
-                            <button 
+                            <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className={`h-9 px-3 flex items-center gap-1.5 rounded-full text-[13px] font-medium transition-colors ml-1 border ${showFilters ? 'bg-gray-100 border-gray-200 text-gray-800' : 'bg-transparent border-transparent text-gray-500 hover:bg-gray-100'}`}
                             >
