@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
-import ClaudeChatInput from "@/components/ClaudeChatInput";
+import ConsensusSearchInput from "@/components/ConsensusSearchInput";
 import ResultDisplay from "@/components/ResultDisplay";
 import History from "@/components/History";
 
@@ -74,33 +74,40 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 space-y-8 font-sans">
+      <main className="flex-1 w-full mx-auto px-4 py-8 font-sans bg-gray-50/30 min-h-screen">
         
-        {/* Chat Input UI Baru */}
-        <ClaudeChatInput onSendMessage={handleSubmit} isLoading={loading} />
+        {/* Chat Input UI Consensus Style */}
+        <div className="mt-8 mb-12">
+            <ConsensusSearchInput onSendMessage={handleSubmit} isLoading={loading} />
+        </div>
 
-        {loading && (
-          <div className="text-center py-12 space-y-4">
-            <div className="inline-block w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin" />
-            <p className="text-zinc-600 text-lg">AI is extracting intent & scanning 4 databases...</p>
-            <p className="text-zinc-400 text-sm">Takes ±5-12 seconds</p>
-          </div>
-        )}
-        {result && <ResultDisplay data={result} />}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <p className="text-red-600 font-medium">❌ {error}</p>
-          </div>
-        )}
-        {!loading && !result && !error && (
-           <div className="bg-white border rounded-xl p-6 shadow-sm">
-             <h3 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">Recent Searches</h3>
-             <History refreshKey={refreshKey} />
-           </div>
-        )}
+        <div className="max-w-4xl mx-auto space-y-8">
+            {loading && (
+              <div className="text-center py-12 space-y-4">
+                <div className="inline-block w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-zinc-600 text-lg">AI is extracting intent & scanning 4 databases...</p>
+                <p className="text-zinc-400 text-sm">Takes ±5-12 seconds</p>
+              </div>
+            )}
+            
+            {result && <ResultDisplay data={result} />}
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center shadow-sm">
+                <p className="text-red-600 font-medium">❌ {error}</p>
+              </div>
+            )}
+            
+            {!loading && !result && !error && (
+               <div className="bg-white border rounded-2xl p-6 shadow-sm">
+                 <h3 className="text-sm font-semibold text-gray-500 mb-4 border-b pb-2">Recent Searches</h3>
+                 <History refreshKey={refreshKey} />
+               </div>
+            )}
+        </div>
       </main>
-      <footer className="text-center py-6 text-zinc-400 text-sm border-t">
-        ScrapJurnal AI v3.0 &mdash; Intelligent Academic Discovery
+      <footer className="text-center py-8 text-zinc-400 text-sm">
+        The new standard for academic research
       </footer>
     </>
   );
