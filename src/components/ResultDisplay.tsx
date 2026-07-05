@@ -97,6 +97,7 @@ function ResultCard({ paper }: { paper: any }) {
           </span>
           <span className="inline-flex items-center gap-1">
              <span className="font-semibold text-xs text-green-700">+{paper._relevanceScore} score</span>
+             {paper._aiVerified && <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded ml-1">AI Verified</span>}
           </span>
         </div>
         <div className="flex items-center gap-2">

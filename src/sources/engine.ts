@@ -4,7 +4,7 @@ import { search as openalex } from "./openalex";
 import { search as semanticscholar } from "./semanticscholar";
 import { search as crossref } from "./crossref";
 import { search as scopus } from "./scopus";
-import { generateKeywords, ExtractedIntent } from "./llm";
+import { generateKeywords, ExtractedIntent, rerankPapers } from "./llm";
 
 export interface SearchParams {
   vars: string;
@@ -199,16 +199,46 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
   // Apply filters and score
   papers = applyFiltersAndScore(papers, params, intent);
 
-  // Sort by RELEVANCE SCORE first, then by citation count
+  // Sort by BM25 Lexical Score first to get the initial top candidates
   papers.sort((a, b) => {
     const scoreA = (a as any)._relevanceScore || 0;
     const scoreB = (b as any)._relevanceScore || 0;
-    if (scoreB !== scoreA) return scoreB - scoreA;
-    return b.cited - a.cited;
+    if (scoreA !== scoreB) return scoreB - scoreA;
+    return (b.cited || 0) - (a.cited || 0);
   });
 
-  // Limit
-  papers = papers.slice(0, params.limit);
+  // SEMANTIC RERANKING (Panggil Gemini buat ngebuang jurnal nyasar)
+  // Biar gak timeout, kita kirim maksimal 15 teratas hasil lexical ke LLM
+  const candidatesForRerank = papers.slice(0, 15).map((p, i) => ({
+    id: p.doi || `local_${i}`, // Pake DOI atau ID palsu kalo gada DOI
+    title: p.title
+  }));
+  
+  const rerankedIds = await rerankPapers(params.vars, candidatesForRerank);
+  
+  // Terapkan hasil reranking
+  if (rerankedIds.length > 0) {
+    const rerankedPapers = [];
+    const remainingPapers = [...papers.slice(15)]; // Sisa yang gak masuk LLM
+
+    // Susun 15 teratas sesuai urutan JSON keluaran Gemini
+    for (const id of rerankedIds) {
+      const idx = papers.findIndex((p, i) => (p.doi || `local_${i}`) === id);
+      if (idx !== -1 && idx < 15) {
+        rerankedPapers.push(papers[idx]);
+        (papers[idx] as any)._aiVerified = true; // Tandai kalo ini udah dilulusin AI
+      }
+    }
+    
+    // Kalau Gemini ngebuang jurnal (misal rendang sapi di-drop), dia gak akan dimasukin lagi
+    // Gabungin hasil reranking + sisa jurnal biasa
+    papers = [...rerankedPapers, ...remainingPapers];
+  }
+
+  // Terapkan limit akhir setelah LLM beres nyortir
+  if (params.limit && params.limit > 0) {
+    papers = papers.slice(0, params.limit);
+  }
 
   return {
     papers,

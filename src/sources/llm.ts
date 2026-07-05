@@ -4,6 +4,7 @@ export interface ExtractedIntent {
   core_concepts: string[];
 }
 
+// 1. INTENT PARSER
 export async function generateKeywords(query: string): Promise<ExtractedIntent> {
   const routerUrl = "https://api.ryznrouter.dev/v1/chat/completions";
   const apiKey = process.env.ROUTER_API_KEY;
@@ -107,4 +108,69 @@ Do not use markdown, do not write explanations.`
   }
 
   return createFallback();
+}
+
+// 2. SEMANTIC RERANKER (Membedakan "Makna" bukan cuma kata, menendang jurnal nyasar)
+export async function rerankPapers(query: string, candidates: {id: string, title: string}[]): Promise<string[]> {
+  // Hanya ambil maksimal 15 jurnal agar token sangat kecil dan Vercel tidak timeout
+  const limitCandidates = candidates.slice(0, 15);
+  if (limitCandidates.length === 0) return [];
+
+  const routerUrl = "https://api.ryznrouter.dev/v1/chat/completions";
+  const apiKey = process.env.ROUTER_API_KEY;
+
+  if (!apiKey) return limitCandidates.map(c => c.id);
+
+  const payload = {
+    model: "ag/gemini-3.1-pro-low",
+    messages: [
+      {
+        role: "system",
+        content: `You are an expert academic evaluator. Your task is to rank research papers based on their STRICT semantic relevance to a user query. 
+Rules:
+1. ONLY return a JSON array of the IDs of the top relevant papers.
+2. If a paper shares keywords but the context is completely different (e.g. Query is "dairy cow partnership", but paper is about "cooking beef rendang" or "cow disease"), DO NOT include it.
+3. Order matters. Put the most relevant IDs first.
+4. Output NOTHING else but the raw JSON array of strings (no markdown, no explanations).`
+      },
+      {
+        role: "user",
+        content: `Query/Topic: "${query}"\n\nCandidates:\n${limitCandidates.map(c => `ID: ${c.id}\nTitle: ${c.title}`).join('\n\n')}`
+      }
+    ],
+    temperature: 0.1,
+    stream: false,
+    max_tokens: 150
+  };
+
+  try {
+    const res = await fetch(routerUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) return limitCandidates.map(c => c.id);
+
+    const data = await res.json();
+    const content = data.choices[0]?.message?.content?.trim() || "";
+    
+    // Anti-bodoh bersihin markdown JSON kalau AI bengal
+    const cleanJson = content.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    let rankedIds: string[] = [];
+    try {
+      rankedIds = JSON.parse(cleanJson);
+      if (!Array.isArray(rankedIds)) throw new Error("Not an array");
+    } catch {
+      return limitCandidates.map(c => c.id);
+    }
+
+    return rankedIds;
+  } catch (err) {
+    return limitCandidates.map(c => c.id);
+  }
 }
