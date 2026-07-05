@@ -116,18 +116,20 @@ export default function Home() {
                       <span className="text-xl font-bold tracking-tight text-gray-900">Nemu Jurnal</span>
                     </div>
                     <h1 className="text-[28px] font-medium tracking-tight text-gray-900">Tanya dan temukan jurnalmu disini</h1>
-                    {!user && (
-                      <p className="text-sm text-gray-400 mt-1">
-                        Temukan jurnal ilmiah dari ribuan sumber · Gratis untuk semua peneliti
-                      </p>
-                    )}
                   </div>
                 )}
 
-                {/* Search box — selalu ada, tidak kemana-mana */}
+                {/* Search box — selalu ada */}
                 <div className="w-full z-10 relative">
                   <ConsensusSearchInput onSendMessage={handleSubmit} isLoading={loading} />
                 </div>
+
+                {/* Tagline — langsung di bawah search bar */}
+                {!result && !loading && (
+                  <p className="text-sm text-gray-400 mt-4 text-center">
+                    Connected with 200M+ Paper Research Database
+                  </p>
+                )}
               </div>
 
               {/* Area bawah — loading / result / FAQ muncul di sini, push ke bawah */}
