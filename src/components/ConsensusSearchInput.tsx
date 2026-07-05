@@ -80,19 +80,50 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
             {/* Main Search Box with SVG Moving Border */}
             <div className="relative w-full bg-white rounded-[24px] border border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex flex-col pt-4 pb-2 px-4 z-10">
 
-                {/* SVG Animated Border Overlay */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-[24px]" style={{ margin: '-1px', width: 'calc(100% + 2px)', height: 'calc(100% + 2px)' }}>
+                {/* SVG Animated Border Overlay (Stepped Comet Trail) */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none rounded-[24px]" style={{ margin: '-1.2px', width: 'calc(100% + 2.4px)', height: 'calc(100% + 2.4px)' }}>
+                    {/* Tail Layer (Light Gray) */}
                     <rect
-                        x="0.5"
-                        y="0.5"
-                        width="calc(100% - 1px)"
-                        height="calc(100% - 1px)"
+                        x="0.6"
+                        y="0.6"
+                        width="calc(100% - 1.2px)"
+                        height="calc(100% - 1.2px)"
+                        rx="24"
+                        ry="24"
+                        fill="transparent"
+                        stroke="#d4d4d8"
+                        strokeWidth="1.2"
+                        strokeDasharray="180 2000"
+                        className="animate-border-flow"
+                        style={{ animationDelay: '0.16s' }}
+                    />
+                    {/* Body Layer (Medium Zinc) */}
+                    <rect
+                        x="0.6"
+                        y="0.6"
+                        width="calc(100% - 1.2px)"
+                        height="calc(100% - 1.2px)"
+                        rx="24"
+                        ry="24"
+                        fill="transparent"
+                        stroke="#71717a"
+                        strokeWidth="1.3"
+                        strokeDasharray="100 2000"
+                        className="animate-border-flow"
+                        style={{ animationDelay: '0.08s' }}
+                    />
+                    {/* Tip Layer (Dark Zinc/Black) */}
+                    <rect
+                        x="0.6"
+                        y="0.6"
+                        width="calc(100% - 1.2px)"
+                        height="calc(100% - 1.2px)"
                         rx="24"
                         ry="24"
                         fill="transparent"
                         stroke="#09090b"
-                        strokeWidth="1.5"
-                        strokeDasharray="120 2000"
+                        strokeWidth="1.4"
+                        strokeDasharray="40 2000"
                         className="animate-border-flow"
                     />
                 </svg>
