@@ -112,7 +112,7 @@ export default function Home() {
                 {!result && !loading && (
                   <div className="flex flex-col items-center mb-6 gap-3">
                     <div className="flex items-center">
-                      <div className="w-[22px] h-[22px] rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-[13px] leading-none mr-0.5 shadow-sm">N</div>
+                      <div className="w-[22px] h-[22px] rounded bg-teal-600 flex items-center justify-center text-white font-serif font-bold text-[15px] leading-none mr-0.5 shadow-sm">N</div>
                       <span className="text-xl font-bold tracking-tight text-gray-900">emu Jurnal</span>
                     </div>
                     <h1 className="text-[28px] font-medium tracking-tight text-gray-700">Temukan referensi jurnalmu disini</h1>
