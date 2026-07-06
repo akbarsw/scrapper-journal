@@ -1,12 +1,13 @@
 // Supabase helper — history + caching
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
+export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export interface HistoryEntry {
+  user_id?: string;
   query: string;
   llm_query?: string;
   year_from?: number;
@@ -22,14 +23,20 @@ export interface HistoryEntry {
 }
 
 export async function saveHistory(entry: HistoryEntry) {
-  const { error } = await supabase.from("search_history").insert([entry]);
-  if (error) console.error("saveHistory error:", error.message);
+  const { data, error } = await supabase.from("search_history").insert([entry]).select("id").single();
+  if (error) {
+    console.error("saveHistory error:", error.message);
+    return null;
+  }
+  return data?.id;
 }
 
-export async function getHistory(limit = 10) {
+export async function getHistory(limit = 10, userId?: string) {
+  if (!userId) return [];
   const { data, error } = await supabase
     .from("search_history")
     .select("*")
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -78,23 +85,56 @@ export function makeCacheHash(params: Record<string, any>): string {
   return Math.abs(hash).toString(36);
 }
 
-// Simple in-memory rate limit (per IP)
-// Since Vercel serverless functions are stateless, we use Supabase for this too
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+// Rate limit (per IP) using Supabase table
+export async function checkRateLimit(ip: string, maxPerHour = 20): Promise<boolean> {
+  try {
+    const now = new Date();
+    const { data, error } = await supabase
+      .from("rate_limits")
+      .select("*")
+      .eq("ip", ip)
+      .single();
 
-export function checkRateLimit(ip: string, maxPerHour = 20): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
+    if (error || !data) {
+      await supabase.from("rate_limits").upsert({
+        ip,
+        count: 1,
+        window_start: now.toISOString(),
+      });
+      return true;
+    }
 
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600_000 });
+    const windowStart = new Date(data.window_start);
+    const timePassed = now.getTime() - windowStart.getTime();
+
+    if (timePassed > 3600_000) {
+      await supabase.from("rate_limits").upsert({
+        ip,
+        count: 1,
+        window_start: now.toISOString(),
+      });
+      return true;
+    }
+
+    if (data.count >= maxPerHour) {
+      return false;
+    }
+
+    await supabase.from("rate_limits").upsert({
+      ip,
+      count: data.count + 1,
+      window_start: data.window_start,
+    });
+
+    return true;
+  } catch (err) {
+    console.error("checkRateLimit error:", err);
     return true;
   }
+}
 
-  if (entry.count >= maxPerHour) {
-    return false;
-  }
-
-  entry.count++;
-  return true;
+export async function saveFeedbackSnapshots(rows: any[]) {
+  if (rows.length === 0) return;
+  const { error } = await supabase.from("paper_feedback").insert(rows);
+  if (error) console.error("saveFeedbackSnapshots error:", error.message);
 }

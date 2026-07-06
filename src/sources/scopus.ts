@@ -3,7 +3,11 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.elsevier.com/content/search/scopus";
-const API_KEY = process.env.SCOPUS_API_KEY || "";
+const API_KEY_ENV = process.env.SCOPUS_API_KEY;
+if (!API_KEY_ENV) {
+  throw new Error("SCOPUS_API_KEY tidak diset di environment variables.");
+}
+const API_KEY: string = API_KEY_ENV;
 
 export async function search(
   query: string,

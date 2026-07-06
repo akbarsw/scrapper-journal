@@ -1,15 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function History({ refreshKey }: { refreshKey: number }) {
   const [history, setHistory] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/history")
-      .then((r) => r.json())
-      .then((d) => setHistory(d.jobs || []))
-      .catch(() => {});
+    const loadHistory = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const res = await fetch("/api/history", {
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        });
+        const d = await res.json();
+        setHistory(d.jobs || []);
+      } catch (err) {}
+    };
+    loadHistory();
   }, [refreshKey]);
 
   if (history.length === 0) {

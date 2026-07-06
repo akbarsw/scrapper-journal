@@ -55,7 +55,10 @@ export default function Home() {
     try {
       const res = await fetch("/api/scrape", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
         body: JSON.stringify(formData),
       });
       const data = await res.json();

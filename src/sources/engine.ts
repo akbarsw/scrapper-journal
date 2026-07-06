@@ -5,6 +5,8 @@ import { search as semanticscholar } from "./semanticscholar";
 import { search as crossref } from "./crossref";
 import { search as scopus } from "./scopus";
 import { generateKeywords, ExtractedIntent, rerankPapers } from "./llm";
+import { WEIGHTS } from "@/lib/scoring-weights";
+import { saveHistory, saveFeedbackSnapshots } from "@/lib/supabase";
 
 export interface SearchParams {
   vars: string;
@@ -109,17 +111,17 @@ function applyFiltersAndScore(papers: Paper[], params: SearchParams, intent: Ext
     let score = 0;
 
     // 1. Lexical Relevance (Dynamic BM25)
-    score += calculateLexicalScore(p, intent);
+    score += calculateLexicalScore(p, intent) * WEIGHTS.lexical;
 
     // 2. Citation Impact
     if (p.cited > 0) {
-      score += Math.log10(p.cited + 1) * 2;
+      score += Math.log10(p.cited + 1) * WEIGHTS.citation;
     }
 
     // 3. Recency Bonus
     if (p.year) {
       const currentYear = new Date().getFullYear();
-      if (p.year === currentYear || p.year === currentYear - 1) score += 3;
+      if (p.year === currentYear || p.year === currentYear - 1) score += WEIGHTS.recency;
       else if (p.year < currentYear - 10) score -= 2;
     }
 
@@ -137,7 +139,7 @@ export interface SearchResult {
   llmQuery?: string;
 }
 
-export async function searchAll(params: SearchParams): Promise<SearchResult> {
+export async function searchAll(params: SearchParams, userId?: string): Promise<SearchResult & { searchId?: string }> {
   const start = Date.now();
 
   // Tembak LLM 9Router buat dapet Intent JSON
@@ -271,6 +273,9 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
       if (idx !== -1 && idx < 15) {
         rerankedPapers.push(papers[idx]);
         (papers[idx] as any)._aiVerified = true; // Tandai kalo ini udah dilulusin AI
+        if (WEIGHTS.aiVerifiedBonus) {
+          (papers[idx] as any)._relevanceScore = Number(((papers[idx] as any)._relevanceScore + WEIGHTS.aiVerifiedBonus).toFixed(2));
+        }
       }
     }
 
@@ -285,11 +290,63 @@ export async function searchAll(params: SearchParams): Promise<SearchResult> {
     papers = papers.slice(0, finalLimit);
   }
 
+  // Save search history and paper feedback snapshot
+  let searchId: string | undefined = undefined;
+  try {
+    const insertedId = await saveHistory({
+      user_id: userId,
+      query: params.vars,
+      llm_query: `${apiQueryEn} | ${apiQueryId}`,
+      year_from: params.yearFrom,
+      year_to: params.yearTo,
+      min_cited: params.minCited,
+      lang: params.lang,
+      exclude: typeof params.exclude === 'string' ? params.exclude : undefined,
+      scopus: params.scopus,
+      limit_count: params.limit,
+      total_results: papers.length,
+      sources: sourceMeta,
+      time_ms: Date.now() - start,
+    });
+    searchId = insertedId || undefined;
+
+    if (searchId && papers.length > 0) {
+      const feedbackRows = papers.map((p, i) => {
+        const doi = p.doi || `local_${i}`;
+        const lexicalScore = (p as any)._relevanceScore || 0;
+        const citationScore = p.cited > 0 ? Math.log10(p.cited + 1) : 0;
+        
+        let recencyScore = 0;
+        if (p.year) {
+          const currentYear = new Date().getFullYear();
+          if (p.year === currentYear || p.year === currentYear - 1) recencyScore = 3;
+          else if (p.year < currentYear - 10) recencyScore = -2;
+        }
+
+        return {
+          search_id: searchId,
+          paper_doi: doi,
+          paper_title: p.title,
+          lexical_score: Number(lexicalScore.toFixed(2)),
+          citation_score: Number(citationScore.toFixed(2)),
+          recency_score: recencyScore,
+          ai_verified: !!(p as any)._aiVerified,
+          final_rank_position: i + 1,
+        };
+      });
+
+      await saveFeedbackSnapshots(feedbackRows);
+    }
+  } catch (historyErr) {
+    console.error("Error saving search history and snapshots:", historyErr);
+  }
+
   return {
     papers,
     total: papers.length,
     sources: sourceMeta,
     time: Date.now() - start,
     llmQuery: `${apiQueryEn} | ${apiQueryId}`,
+    searchId,
   };
 }

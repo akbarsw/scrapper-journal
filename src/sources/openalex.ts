@@ -6,7 +6,7 @@ const BASE = "https://api.openalex.org";
 const EMAIL = process.env.OPENALEX_EMAIL || "apakahbenar@ryznrouter.dev";
 const API_KEY = process.env.OPENALEX_API_KEY || "";
 
-function reconstructAbstract(invertedIndex: Record<string, number[]> | null): string | null {
+function reconstructAbstract(invertedIndex: Record<string, number[]> | null | undefined): string | null {
   if (!invertedIndex) return null;
   const wordPositions: [string, number][] = [];
   for (const [word, positions] of Object.entries(invertedIndex)) {

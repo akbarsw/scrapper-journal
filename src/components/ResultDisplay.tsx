@@ -31,8 +31,9 @@ interface Props {
 }
 
 /* --- RESULT CARD --- */
-function ResultCard({ paper }: { paper: any }) {
+function ResultCard({ paper, searchId, fallbackId }: { paper: any; searchId?: string; fallbackId: string }) {
   const [showAbstract, setShowAbstract] = useState(false);
+  const [vote, setVote] = useState<"up" | "down" | null>(null);
   const { savedPapers, savePaper, removePaper } = useAppStore();
   const isSaved = savedPapers.some(p => p.paper_id === (paper.id || paper.doi));
 
@@ -47,6 +48,27 @@ function ResultCard({ paper }: { paper: any }) {
         abstract: paper.abstract,
         url: paper.doi ? `https://doi.org/${paper.doi}` : ""
       });
+    }
+  };
+
+  const handleFeedback = async (type: "up" | "down") => {
+    if (!searchId) return;
+    setVote(type);
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          searchId,
+          paperDoi: paper.doi || fallbackId,
+          feedback: type,
+        }),
+      });
+      if (!res.ok) {
+        setVote(null);
+      }
+    } catch {
+      setVote(null);
     }
   };
 
@@ -128,6 +150,36 @@ function ResultCard({ paper }: { paper: any }) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {searchId && (
+            <div className="flex items-center gap-1.5 mr-2 border-r pr-2 border-gray-200">
+              <button 
+                onClick={() => handleFeedback("up")} 
+                title="Bermanfaat"
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${
+                  vote === "up" 
+                    ? "bg-green-50 text-green-600 border border-green-200" 
+                    : "hover:bg-gray-50 text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                </svg>
+              </button>
+              <button 
+                onClick={() => handleFeedback("down")} 
+                title="Kurang relevan"
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${
+                  vote === "down" 
+                    ? "bg-red-50 text-red-500 border border-red-200" 
+                    : "hover:bg-gray-50 text-gray-400 hover:text-red-400"
+                }`}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm8-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
+                </svg>
+              </button>
+            </div>
+          )}
           <button onClick={handleSaveToggle} aria-label="Simpan" className="cursor-pointer">
             {isSaved
               ? <BookmarkCheck className="w-4 h-4 text-teal-600" />
@@ -226,9 +278,20 @@ export default function ResultDisplay({ data }: Props) {
             Tidak ada jurnal yang sesuai dengan filter ini.
           </div>
         ) : (
-          filteredPapers.map((p: any, i: number) => (
-            <ResultCard key={p.doi || `${p.title}_${i}`} paper={p} />
-          ))
+          filteredPapers.map((p: any, i: number) => {
+            const originalIndex = data.papers.findIndex(
+              (x: any) => (x.doi && x.doi === p.doi) || x.title === p.title
+            );
+            const fallbackId = `local_${originalIndex !== -1 ? originalIndex : i}`;
+            return (
+              <ResultCard 
+                key={p.doi || `${p.title}_${i}`} 
+                paper={p} 
+                searchId={(data as any).searchId} 
+                fallbackId={fallbackId} 
+              />
+            );
+          })
         )}
       </div>
     </div>

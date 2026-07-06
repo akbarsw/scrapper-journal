@@ -1,12 +1,12 @@
 import { searchAll } from "@/sources/engine";
 import type { SearchParams } from "@/sources/engine";
-import { saveHistory, getCached, setCache, makeCacheHash, checkRateLimit } from "@/lib/supabase";
+import { supabase, getCached, setCache, makeCacheHash, checkRateLimit } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
     // Rate limit
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
-    if (!checkRateLimit(ip, 20)) {
+    if (!(await checkRateLimit(ip, 20))) {
       return Response.json({ error: "Rate limit: maksimal 20 pencarian per jam" }, { status: 429 });
     }
 
@@ -34,31 +34,20 @@ export async function POST(request: Request) {
       return Response.json({ ...(cached as any), cached: true });
     }
 
-    // Execute search
-    const result = await searchAll(params);
+    // Extract authorization user ID
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.split(" ")[1];
+    let userId: string | undefined = undefined;
+    if (token) {
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id;
+    }
+
+    // Execute search with userId passed
+    const result = await searchAll(params, userId);
 
     // Save to cache (60 min TTL)
     await setCache(cacheKey, result, 60);
-
-    // Save history to Supabase
-    try {
-      await saveHistory({
-        query: params.vars,
-        llm_query: (result as any).llmQuery || "",
-        year_from: params.yearFrom,
-        year_to: params.yearTo,
-        min_cited: params.minCited,
-        lang: params.lang,
-        exclude: params.exclude,
-        scopus: params.scopus,
-        limit_count: params.limit,
-        total_results: result.total,
-        sources: result.sources,
-        time_ms: result.time,
-      });
-    } catch {
-      // Non-blocking — history save failure won't crash response
-    }
 
     // DEBUG: Inject llm_query ke balikan JSON biar user bisa lihat di inspector jaringan
     const debugResult = { ...result, llm_query_used: (result as any).llmQuery || "kosong/fallback" };

@@ -3,7 +3,10 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.semanticscholar.org/graph/v1";
-const API_KEY = process.env.S2_API_KEY || "";
+const API_KEY = process.env.S2_API_KEY;
+if (!API_KEY) {
+  console.warn("S2_API_KEY tidak diset — request ke Semantic Scholar akan pakai rate limit publik tanpa key.");
+}
 
 export async function search(
   query: string,
