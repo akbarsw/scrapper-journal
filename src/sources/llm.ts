@@ -150,7 +150,7 @@ Rules:
     ],
     temperature: 0.1,
     stream: false,
-    max_tokens: 150
+    max_tokens: 500
   };
 
   try {

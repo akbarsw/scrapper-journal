@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const cacheKey = makeCacheHash(params);
     const cached = await getCached(cacheKey);
     if (cached) {
-      return Response.json({ ...(cached as any), cached: true });
+      return Response.json({ ...(cached as any), cached: true, limit: params.limit });
     }
 
     // Extract authorization user ID
@@ -50,7 +50,11 @@ export async function POST(request: Request) {
     await setCache(cacheKey, result, 60);
 
     // DEBUG: Inject llm_query ke balikan JSON biar user bisa lihat di inspector jaringan
-    const debugResult = { ...result, llm_query_used: (result as any).llmQuery || "kosong/fallback" };
+    const debugResult = { 
+      ...result, 
+      limit: params.limit,
+      llm_query_used: (result as any).llmQuery || "kosong/fallback" 
+    };
     
     return Response.json(debugResult);
   } catch (err: any) {

@@ -139,7 +139,7 @@ export interface SearchResult {
   llmQuery?: string;
 }
 
-export async function searchAll(params: SearchParams, userId?: string): Promise<SearchResult & { searchId?: string }> {
+export async function searchAll(params: SearchParams, userId?: string): Promise<SearchResult & { searchId?: string; limit?: number }> {
   const start = Date.now();
 
   // Tembak LLM 9Router buat dapet Intent JSON
@@ -316,7 +316,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
     if (searchId && papers.length > 0) {
       const feedbackRows = papers.map((p, i) => {
         const doi = p.doi || `local_${i}`;
-        const lexicalScore = (p as any)._relevanceScore || 0;
+        const lexicalScore = calculateLexicalScore(p, intent);
         const citationScore = p.cited > 0 ? Math.log10(p.cited + 1) : 0;
         
         let recencyScore = 0;
@@ -351,5 +351,6 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
     time: Date.now() - start,
     llmQuery: `${apiQueryEn} | ${apiQueryId}`,
     searchId,
+    limit: params.limit,
   };
 }

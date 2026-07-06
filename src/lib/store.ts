@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { supabase } from './supabaseClient'
 
 interface SearchHistory {
   id: string
@@ -26,11 +27,10 @@ interface AppState {
   savedPapers: SavedPaper[]
   history: SearchHistory[]
   
-  // LocalStorage Actions (since Supabase tables need manual setup via UI)
-  loadLocalData: () => void
+  loadLocalData: () => Promise<void>
   saveHistory: (query: string) => void
-  savePaper: (paper: any) => void
-  removePaper: (paperId: string) => void
+  savePaper: (paper: any) => Promise<void>
+  removePaper: (paperId: string) => Promise<void>
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -44,13 +44,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   savedPapers: [],
   history: [],
 
-  loadLocalData: () => {
+  loadLocalData: async () => {
     try {
       const hist = localStorage.getItem('referensia_history')
       if (hist) set({ history: JSON.parse(hist) })
       
-      const lib = localStorage.getItem('referensia_library')
-      if (lib) set({ savedPapers: JSON.parse(lib) })
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data, error } = await supabase
+          .from('saved_papers')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (!error && data) {
+          set({ savedPapers: data })
+        }
+      }
     } catch (e) {
       console.error('Failed to load local data', e)
     }
@@ -78,38 +87,60 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  savePaper: (paper: any) => {
+  savePaper: async (paper: any) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const paperId = paper.id || paper.doi || Math.random().toString()
       const newPaper = {
-        id: Math.random().toString(36).substr(2, 9),
-        paper_id: paper.id || Math.random().toString(),
+        user_id: session.user.id,
+        paper_id: paperId,
         title: paper.title,
-        abstract: paper.abstract,
-        url: paper.url || paper.doi || '',
-        created_at: new Date().toISOString()
+        abstract: paper.abstract || '',
+        url: paper.url || (paper.doi ? `https://doi.org/${paper.doi}` : ''),
       }
-      
-      set((state) => {
-        // Prevent duplicates
-        if (state.savedPapers.some(p => p.paper_id === newPaper.paper_id)) {
-           return state;
-        }
-        const updated = [newPaper, ...state.savedPapers]
-        localStorage.setItem('referensia_library', JSON.stringify(updated))
-        return { savedPapers: updated }
-      })
+
+      // Prevent duplicates locally
+      const current = get().savedPapers
+      if (current.some(p => p.paper_id === newPaper.paper_id)) {
+         return;
+      }
+
+      const { data, error } = await supabase
+        .from('saved_papers')
+        .insert([newPaper])
+        .select('*')
+        .single()
+
+      if (!error && data) {
+        set((state) => ({ savedPapers: [data, ...state.savedPapers] }))
+      } else if (error) {
+        console.error('Failed to save paper to DB:', error.message)
+      }
     } catch (e) {
       console.error('Failed to save paper', e)
     }
   },
 
-  removePaper: (paperId: string) => {
+  removePaper: async (paperId: string) => {
     try {
-      set((state) => {
-        const updated = state.savedPapers.filter(p => p.paper_id !== paperId)
-        localStorage.setItem('referensia_library', JSON.stringify(updated))
-        return { savedPapers: updated }
-      })
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const { error } = await supabase
+        .from('saved_papers')
+        .delete()
+        .eq('paper_id', paperId)
+        .eq('user_id', session.user.id)
+
+      if (!error) {
+        set((state) => ({
+          savedPapers: state.savedPapers.filter(p => p.paper_id !== paperId)
+        }))
+      } else {
+        console.error('Failed to remove paper from DB:', error.message)
+      }
     } catch (e) {
       console.error('Failed to remove paper', e)
     }

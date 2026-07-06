@@ -27,6 +27,8 @@ interface Props {
     sources: { name: string; count: number; error?: string }[];
     time: number;
     llmQuery?: string;
+    limit?: number;
+    searchId?: string;
   };
 }
 
@@ -217,7 +219,7 @@ export default function ResultDisplay({ data }: Props) {
         if (filterLower.includes("semantic-scholar") && paperSourceLower === "semantic-scholar") return true;
         return false;
       })
-    : data.papers.slice(0, 20); // Default to top 20 ranked papers
+    : data.papers.slice(0, data.limit || 20); // Default to top ranked papers based on limit
 
   return (
     <div className="font-sans">
@@ -287,7 +289,7 @@ export default function ResultDisplay({ data }: Props) {
               <ResultCard 
                 key={p.doi || `${p.title}_${i}`} 
                 paper={p} 
-                searchId={(data as any).searchId} 
+                searchId={data.searchId} 
                 fallbackId={fallbackId} 
               />
             );
