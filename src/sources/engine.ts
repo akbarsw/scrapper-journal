@@ -295,8 +295,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   try {
     const insertedId = await saveHistory({
       user_id: userId,
-      query: params.vars,
-      llm_query: `${apiQueryEn} | ${apiQueryId}`,
+      vars: params.vars,
       year_from: params.yearFrom,
       year_to: params.yearTo,
       min_cited: params.minCited,

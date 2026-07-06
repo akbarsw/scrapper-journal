@@ -8,8 +8,7 @@ export const supabase = createClient(
 
 export interface HistoryEntry {
   user_id?: string;
-  query: string;
-  llm_query?: string;
+  vars: string;
   year_from?: number;
   year_to?: number;
   min_cited?: number;
