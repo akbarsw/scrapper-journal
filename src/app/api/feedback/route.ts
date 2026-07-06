@@ -9,8 +9,18 @@ export async function POST(req: Request) {
   try {
     const { searchId, paperDoi, feedback } = await req.json();
 
+    if (!searchId || !paperDoi) {
+      return Response.json(
+        { success: false, error: "Missing required fields", statusCode: 400 },
+        { status: 400 }
+      );
+    }
+
     if (!["up", "down"].includes(feedback)) {
-      return Response.json({ error: "Invalid feedback value" }, { status: 400 });
+      return Response.json(
+        { success: false, error: "Invalid feedback value", statusCode: 400 },
+        { status: 400 }
+      );
     }
 
     const { error } = await supabase
@@ -18,9 +28,20 @@ export async function POST(req: Request) {
       .update({ feedback })
       .match({ search_id: searchId, paper_doi: paperDoi });
 
-    if (error) return Response.json({ error: error.message }, { status: 500 });
-    return Response.json({ ok: true });
+    if (error) {
+      console.error("Supabase feedback update error:", error.message);
+      return Response.json(
+        { success: false, error: error.message, statusCode: 500 },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({ success: true, data: { ok: true }, statusCode: 200 });
   } catch (err: any) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error("Feedback route error:", err.message);
+    return Response.json(
+      { success: false, error: err.message, statusCode: 500 },
+      { status: 500 }
+    );
   }
 }

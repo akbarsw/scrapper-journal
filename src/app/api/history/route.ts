@@ -12,12 +12,24 @@ export async function GET(request: Request) {
     }
 
     if (!userId) {
-      return Response.json({ jobs: [] });
+      return Response.json(
+        { success: false, error: "Unauthorized access", statusCode: 401, jobs: [] },
+        { status: 401 }
+      );
     }
 
     const history = await getHistory(10, userId);
-    return Response.json({ jobs: history });
+    return Response.json({
+      success: true,
+      data: history,
+      jobs: history,
+      statusCode: 200
+    });
   } catch (err: any) {
-    return Response.json({ jobs: [] });
+    console.error("History API route error:", err.message);
+    return Response.json(
+      { success: false, error: err.message, statusCode: 500, jobs: [] },
+      { status: 500 }
+    );
   }
 }

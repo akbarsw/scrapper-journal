@@ -7,7 +7,10 @@ export async function POST(request: Request) {
     // Rate limit
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
     if (!(await checkRateLimit(ip, 20))) {
-      return Response.json({ error: "Rate limit: maksimal 20 pencarian per jam" }, { status: 429 });
+      return Response.json(
+        { success: false, error: "Rate limit: maksimal 20 pencarian per jam", statusCode: 429 },
+        { status: 429 }
+      );
     }
 
     const body = await request.json();
@@ -24,7 +27,10 @@ export async function POST(request: Request) {
     };
 
     if (!params.vars.trim()) {
-      return Response.json({ error: "Variabel penelitian wajib diisi" }, { status: 400 });
+      return Response.json(
+        { success: false, error: "Variabel penelitian wajib diisi", statusCode: 400 },
+        { status: 400 }
+      );
     }
 
     // Check cache
@@ -71,12 +77,18 @@ export async function POST(request: Request) {
           });
         }
       }
-      return Response.json({ 
+      const responseData = { 
         ...(cached as any), 
         cached: true, 
         limit: params.limit, 
         feedbacks,
         globalVotes 
+      };
+      return Response.json({
+        success: true,
+        data: responseData,
+        statusCode: 200,
+        ...responseData
       });
     }
 
@@ -122,15 +134,24 @@ export async function POST(request: Request) {
     }
 
     // DEBUG: Inject llm_query ke balikan JSON biar user bisa lihat di inspector jaringan
-    const debugResult = { 
+    const responseData = { 
       ...result, 
       limit: params.limit,
       globalVotes,
       llm_query_used: (result as any).llmQuery || "kosong/fallback" 
     };
     
-    return Response.json(debugResult);
+    return Response.json({
+      success: true,
+      data: responseData,
+      statusCode: 200,
+      ...responseData
+    });
   } catch (err: any) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error("Scrape route error:", err.message);
+    return Response.json(
+      { success: false, error: err.message, statusCode: 500 },
+      { status: 500 }
+    );
   }
 }
