@@ -245,6 +245,9 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   // Apply filters and score
   papers = applyFiltersAndScore(papers, params, intent);
 
+  // Filter out papers with score less than minRelevanceScore
+  papers = papers.filter(p => ((p as any)._relevanceScore || 0) >= WEIGHTS.minRelevanceScore);
+
   // Sort by BM25 Lexical Score first to get the initial top candidates
   papers.sort((a, b) => {
     const scoreA = (a as any)._relevanceScore || 0;
@@ -257,7 +260,8 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   // Biar gak timeout, kita kirim maksimal 15 teratas hasil lexical ke LLM
   const candidatesForRerank = papers.slice(0, 15).map((p, i) => ({
     id: p.doi || `local_${i}`, // Pake DOI or ID palsu kalo gada DOI
-    title: p.title
+    title: p.title,
+    abstract: (p.abstract || "").slice(0, 300)
   }));
 
   const rerankedIds = await rerankPapers(params.vars, candidatesForRerank);

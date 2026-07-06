@@ -43,7 +43,10 @@ export async function generateKeywords(query: string): Promise<ExtractedIntent> 
 Given a research topic/query (in Indonesian or English), extract the core entities and concepts.
 Respond ONLY with a valid minified JSON object exactly like this:
 {"en":["english concept 1","english concept 2"],"id":["konsep indo 1","konsep indo 2"]}
-Make sure concepts are cleaned of noise words. Provide translation to the other language if applicable.
+Make sure concepts are SPECIFIC multi-word phrases (2-3 words), not generic single words.
+Example Bad: ["kemitraan", "susu", "peternak"]
+Example Good: ["kemitraan peternak sapi", "koperasi susu"]
+Provide translation to the other language if applicable.
 Do not use markdown, do not write explanations.`
       },
       {
@@ -118,7 +121,7 @@ Do not use markdown, do not write explanations.`
 }
 
 // 2. SEMANTIC RERANKER (Membedakan "Makna" bukan cuma kata, menendang jurnal nyasar)
-export async function rerankPapers(query: string, candidates: {id: string, title: string}[]): Promise<string[]> {
+export async function rerankPapers(query: string, candidates: {id: string, title: string, abstract?: string}[]): Promise<string[]> {
   // Hanya ambil maksimal 15 jurnal agar token sangat kecil dan Vercel tidak timeout
   const limitCandidates = candidates.slice(0, 15);
   if (limitCandidates.length === 0) return [];
@@ -133,16 +136,16 @@ export async function rerankPapers(query: string, candidates: {id: string, title
     messages: [
       {
         role: "system",
-        content: `You are an expert academic evaluator. Your task is to rank research papers based on their STRICT semantic relevance to a user query. 
+        content: `You are an expert academic evaluator. Your task is to select and rank research papers based on their STRICT semantic relevance to a user query.
 Rules:
-1. ONLY return a JSON array of the IDs of the top relevant papers.
-2. If a paper shares keywords but the context is completely different (e.g. Query is "dairy cow partnership", but paper is about "cooking beef rendang" or "cow disease"), DO NOT include it.
+1. ONLY return a JSON array of the IDs of papers that are genuinely relevant to the query's specific topic.
+2. Exclude any papers that are not relevant or only share a general theme but not the specific subject.
 3. Order matters. Put the most relevant IDs first.
 4. Output NOTHING else but the raw JSON array of strings (no markdown, no explanations).`
       },
       {
         role: "user",
-        content: `Query/Topic: "${query}"\n\nCandidates:\n${limitCandidates.map(c => `ID: ${c.id}\nTitle: ${c.title}`).join('\n\n')}`
+        content: `Query/Topic: "${query}"\n\nCandidates:\n${limitCandidates.map(c => `ID: ${c.id}\nTitle: ${c.title}\nAbstract: ${c.abstract || "N/A"}`).join('\n\n')}`
       }
     ],
     temperature: 0.1,
