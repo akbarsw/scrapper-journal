@@ -32,12 +32,9 @@ export async function search(
     if (yearTo) filter.push(`to_publication_date:${yearTo}-12-31`);
     if (minCited && minCited > 0) filter.push(`cited_by_count:>${minCited}`);
 
-    // Use default.search in filter to restrict search to title, abstract, and keywords (avoid full-text noise)
-    filter.push(`default.search:${query}`);
-
     const params = new URLSearchParams({
+      search: query,
       per_page: String(Math.min(limit * 2, 50)),
-      sort: "cited_by_count:desc",
       mailto: EMAIL,
     });
     // Add API key if available to avoid rate limiting
