@@ -122,8 +122,8 @@ Do not use markdown, do not write explanations.`
 
 // 2. SEMANTIC RERANKER (Membedakan "Makna" bukan cuma kata, menendang jurnal nyasar)
 export async function rerankPapers(query: string, candidates: {id: string, title: string, abstract?: string}[]): Promise<string[]> {
-  // Hanya ambil maksimal 15 jurnal agar token sangat kecil dan Vercel tidak timeout
-  const limitCandidates = candidates.slice(0, 15);
+  // Ambil maksimal 25 jurnal agar token tetap kecil dan Vercel tidak timeout
+  const limitCandidates = candidates.slice(0, 25);
   if (limitCandidates.length === 0) return [];
 
   const routerUrl = "https://api.ryznrouter.dev/v1/chat/completions";
@@ -150,7 +150,7 @@ Rules:
     ],
     temperature: 0.1,
     stream: false,
-    max_tokens: 500
+    max_tokens: 800
   };
 
   try {

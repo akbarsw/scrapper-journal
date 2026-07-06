@@ -53,26 +53,57 @@ function dedup(papers: Paper[]): Paper[] {
 }
 
 function calculateLexicalScore(paper: Paper, intent: ExtractedIntent): number {
-  const text = (paper.title + " " + (paper.abstract || "")).toLowerCase();
+  const titleText = paper.title.toLowerCase();
+  const abstractText = (paper.abstract || "").toLowerCase();
+  const fullText = titleText + " " + abstractText;
 
   const enConcepts = intent.enConcepts || [];
   const idConcepts = intent.idConcepts || [];
 
-  let matchesEn = 0;
-  for (const concept of enConcepts) {
-    if (text.includes(concept.toLowerCase())) matchesEn++;
+  function scoreConceptSet(concepts: string[]): number {
+    if (concepts.length === 0) return 0;
+    let totalScore = 0;
+
+    for (const concept of concepts) {
+      const conceptLower = concept.toLowerCase();
+      // Split multi-word concept into individual terms for partial matching
+      const terms = conceptLower.split(/\s+/).filter(t => t.length > 2);
+      
+      let conceptScore = 0;
+      let matchedTerms = 0;
+
+      for (const term of terms) {
+        // Count term frequency in title (4x weight) and abstract (1x weight)
+        const titleMatches = (titleText.match(new RegExp(`\\b${escapeRegex(term)}\\b`, "g")) || []).length;
+        const abstractMatches = (abstractText.match(new RegExp(`\\b${escapeRegex(term)}\\b`, "g")) || []).length;
+        
+        if (titleMatches > 0 || abstractMatches > 0) {
+          matchedTerms++;
+          // Title match = 4 points per term, Abstract = 1 point per term (with frequency)
+          conceptScore += (titleMatches * 4) + (abstractMatches * 1);
+        }
+      }
+
+      // Partial credit: if 2 of 3 terms match, get 2/3 of the score
+      if (terms.length > 0) {
+        const coverage = matchedTerms / terms.length;
+        totalScore += conceptScore * coverage;
+      }
+    }
+
+    // Normalize to max 20 points
+    return Math.min(totalScore / Math.max(concepts.length, 1) * 3, 20);
   }
 
-  let matchesId = 0;
-  for (const concept of idConcepts) {
-    if (text.includes(concept.toLowerCase())) matchesId++;
-  }
-
-  const scoreEn = enConcepts.length > 0 ? (matchesEn / enConcepts.length) * 20 : 0;
-  const scoreId = idConcepts.length > 0 ? (matchesId / idConcepts.length) * 20 : 0;
+  const scoreEn = scoreConceptSet(enConcepts);
+  const scoreId = scoreConceptSet(idConcepts);
 
   // Bilateral check: take maximum of English match or Indonesian match
   return Math.max(scoreEn, scoreId);
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function applyFiltersAndScore(papers: Paper[], params: SearchParams, intent: ExtractedIntent): Paper[] {
@@ -266,10 +297,10 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
 
   // SEMANTIC RERANKING (Panggil Gemini buat ngebuang jurnal nyasar)
   // Biar gak timeout, kita kirim maksimal 15 teratas hasil lexical ke LLM
-  const candidatesForRerank = papers.slice(0, 15).map((p, i) => ({
+  const candidatesForRerank = papers.slice(0, 25).map((p, i) => ({
     id: p.doi || `local_${i}`, // Pake DOI or ID palsu kalo gada DOI
     title: p.title,
-    abstract: (p.abstract || "").slice(0, 300)
+    abstract: (p.abstract || "").slice(0, 500)
   }));
 
   const rerankedIds = await rerankPapers(params.vars, candidatesForRerank);
@@ -277,12 +308,12 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   // Terapkan hasil reranking
   if (rerankedIds.length > 0) {
     const rerankedPapers = [];
-    const remainingPapers = [...papers.slice(15)]; // Sisa yang gak masuk LLM
+    const remainingPapers = [...papers.slice(25)]; // Sisa yang gak masuk LLM
 
-    // Susun 15 teratas sesuai urutan JSON keluaran Gemini
+    // Susun 25 teratas sesuai urutan JSON keluaran Gemini
     for (const id of rerankedIds) {
       const idx = papers.findIndex((p, i) => (p.doi || `local_${i}`) === id);
-      if (idx !== -1 && idx < 15) {
+      if (idx !== -1 && idx < 25) {
         rerankedPapers.push(papers[idx]);
         (papers[idx] as any)._aiVerified = true; // Tandai kalo ini udah dilulusin AI
         if (WEIGHTS.aiVerifiedBonus) {
