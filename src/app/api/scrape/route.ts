@@ -31,7 +31,22 @@ export async function POST(request: Request) {
     const cacheKey = makeCacheHash(params);
     const cached = await getCached(cacheKey);
     if (cached) {
-      return Response.json({ ...(cached as any), cached: true, limit: params.limit });
+      let feedbacks: Record<string, string> = {};
+      const cachedSearchId = (cached as any).searchId;
+      if (cachedSearchId) {
+        const { data: fbData } = await supabase
+          .from("paper_feedback")
+          .select("paper_doi, feedback")
+          .eq("search_id", cachedSearchId);
+        if (fbData) {
+          fbData.forEach(row => {
+            if (row.paper_doi && row.feedback) {
+              feedbacks[row.paper_doi] = row.feedback;
+            }
+          });
+        }
+      }
+      return Response.json({ ...(cached as any), cached: true, limit: params.limit, feedbacks });
     }
 
     // Extract authorization user ID

@@ -29,13 +29,31 @@ interface Props {
     llmQuery?: string;
     limit?: number;
     searchId?: string;
+    feedbacks?: Record<string, "up" | "down">;
   };
 }
 
 /* --- RESULT CARD --- */
-function ResultCard({ paper, searchId, fallbackId }: { paper: any; searchId?: string; fallbackId: string }) {
+function ResultCard({ 
+  paper, 
+  searchId, 
+  fallbackId,
+  feedbacks 
+}: { 
+  paper: any; 
+  searchId?: string; 
+  fallbackId: string;
+  feedbacks?: Record<string, "up" | "down">;
+}) {
   const [showAbstract, setShowAbstract] = useState(false);
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
+  
+  const votes = useAppStore((state) => state.votes);
+  const setVoteStore = useAppStore((state) => state.setVote);
+  
+  const paperKey = paper.doi || fallbackId;
+  const storeVote = votes[`${searchId}_${paperKey}`];
+  const dbVote = feedbacks?.[paperKey];
+  const vote = storeVote !== undefined ? storeVote : (dbVote || null);
   const { savedPapers, savePaper, removePaper } = useAppStore();
   const isSaved = savedPapers.some(p => p.paper_id === (paper.id || paper.doi));
 
@@ -55,7 +73,7 @@ function ResultCard({ paper, searchId, fallbackId }: { paper: any; searchId?: st
 
   const handleFeedback = async (type: "up" | "down") => {
     if (!searchId) return;
-    setVote(type);
+    setVoteStore(`${searchId}_${paperKey}`, type);
     try {
       const res = await fetch("/api/feedback", {
         method: "POST",
@@ -67,10 +85,10 @@ function ResultCard({ paper, searchId, fallbackId }: { paper: any; searchId?: st
         }),
       });
       if (!res.ok) {
-        setVote(null);
+        setVoteStore(`${searchId}_${paperKey}`, null);
       }
     } catch {
-      setVote(null);
+      setVoteStore(`${searchId}_${paperKey}`, null);
     }
   };
 
@@ -291,6 +309,7 @@ export default function ResultDisplay({ data }: Props) {
                 paper={p} 
                 searchId={data.searchId} 
                 fallbackId={fallbackId} 
+                feedbacks={data.feedbacks}
               />
             );
           })

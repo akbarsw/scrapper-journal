@@ -31,6 +31,8 @@ interface AppState {
   saveHistory: (query: string) => void
   savePaper: (paper: any) => Promise<void>
   removePaper: (paperId: string) => Promise<void>
+  votes: Record<string, 'up' | 'down' | null>
+  setVote: (key: string, type: 'up' | 'down' | null) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -144,5 +146,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (e) {
       console.error('Failed to remove paper', e)
     }
-  }
+  },
+
+  votes: {},
+  setVote: (key, type) => set((state) => ({
+    votes: { ...state.votes, [key]: type }
+  }))
 }))
