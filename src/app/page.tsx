@@ -129,7 +129,7 @@ export default function Home() {
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
                     <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-                      Tulis
+                      Write
                     </button>
                     <button className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-gray-200 text-[13px] font-medium text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
