@@ -23,6 +23,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
   // Sources selection
   const [useOpenAlex, setUseOpenAlex] = useState(true);
   const [useSemanticScholar, setUseSemanticScholar] = useState(true);
+  const [useCrossref, setUseCrossref] = useState(true);
   const [useScopus, setUseScopus] = useState(true);
 
   if (!isOpen) return null;
@@ -38,6 +39,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
     const selectedSources: string[] = [];
     if (useOpenAlex) selectedSources.push('openalex');
     if (useSemanticScholar) selectedSources.push('semanticscholar');
+    if (useCrossref) selectedSources.push('crossref');
     if (useScopus) selectedSources.push('scopus');
 
     onApply({
@@ -60,10 +62,11 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
     setLimit(10);
     setUseOpenAlex(true);
     setUseSemanticScholar(true);
+    setUseCrossref(true);
     setUseScopus(true);
   };
 
-  const uncheckedSourcesCount = 3 - (useOpenAlex ? 1 : 0) - (useSemanticScholar ? 1 : 0) - (useScopus ? 1 : 0);
+  const uncheckedSourcesCount = 4 - (useOpenAlex ? 1 : 0) - (useSemanticScholar ? 1 : 0) - (useCrossref ? 1 : 0) - (useScopus ? 1 : 0);
 
   return (
     <>
@@ -86,7 +89,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
               <span className="text-[15px] font-bold text-gray-900">General</span>
               <div className="flex items-center gap-3">
                  {activeFiltersCount - (uncheckedSourcesCount > 0 ? 1 : 0) > 0 && (
-                   <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center">
+                   <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 text-[11px] font-bold flex items-center justify-center">
                      {activeFiltersCount - (uncheckedSourcesCount > 0 ? 1 : 0)}
                    </span>
                  )}
@@ -112,7 +115,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                         }}
                         className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors cursor-pointer ${
                           yearType === type 
-                          ? 'bg-[#e0e7ff] text-gray-900 border border-blue-200' 
+                          ? 'bg-teal-50 text-gray-900 border border-teal-200' 
                           : 'bg-gray-100 text-gray-600 border border-transparent hover:bg-gray-200'
                         }`}
                       >
@@ -122,9 +125,9 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                   </div>
                   {yearType !== 'Any' && (
                      <div className="flex items-center gap-3 pt-1">
-                       <input type="number" value={yearFrom} onChange={e => setYearFrom(Number(e.target.value))} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 font-medium" />
+                       <input type="number" value={yearFrom} onChange={e => setYearFrom(Number(e.target.value))} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 font-medium" />
                        <span className="text-gray-400 font-bold">-</span>
-                       <input type="number" value={yearTo} onChange={e => setYearTo(Number(e.target.value))} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 font-medium" />
+                       <input type="number" value={yearTo} onChange={e => setYearTo(Number(e.target.value))} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 font-medium" />
                      </div>
                   )}
                 </div>
@@ -133,14 +136,14 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                   <h3 className="text-[13px] font-bold text-gray-900">Citations</h3>
                   <div className="relative flex items-center">
                     <span className="absolute left-3 text-gray-400 text-sm">At least</span>
-                    <input type="number" value={minCitations} onChange={e => setMinCitations(e.target.value ? Number(e.target.value) : '')} className="w-full h-10 pl-16 pr-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 font-medium" />
+                    <input type="number" value={minCitations} onChange={e => setMinCitations(e.target.value ? Number(e.target.value) : '')} className="w-full h-10 pl-16 pr-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 font-medium" />
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <h3 className="text-[13px] font-bold text-gray-900">Language</h3>
                   <div className="relative">
-                    <select value={lang} onChange={e => setLang(e.target.value)} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 appearance-none bg-white font-medium cursor-pointer">
+                    <select value={lang} onChange={e => setLang(e.target.value)} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 appearance-none bg-white font-medium cursor-pointer">
                       <option value="both">Any (Indonesian & English)</option>
                       <option value="id">Indonesian Only</option>
                       <option value="en">English Only</option>
@@ -152,7 +155,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                 <div className="space-y-3">
                   <h3 className="text-[13px] font-bold text-gray-900">Max Results</h3>
                   <div className="relative">
-                    <select value={limit} onChange={e => setLimit(Number(e.target.value))} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 appearance-none bg-white font-medium cursor-pointer">
+                    <select value={limit} onChange={e => setLimit(Number(e.target.value))} className="w-full h-10 px-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-teal-500 appearance-none bg-white font-medium cursor-pointer">
                       <option value={10}>Top 10 Papers</option>
                       <option value={20}>Top 20 Papers</option>
                       <option value={50}>Top 50 Papers</option>
@@ -167,7 +170,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                       <LockOpen className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
                       <span className="text-[14px] font-bold text-gray-900">Open access</span>
                     </div>
-                    <button onClick={() => setOpenAccess(!openAccess)} className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 cursor-pointer ${openAccess ? 'bg-[#3b82f6]' : 'bg-gray-300'}`}>
+                    <button onClick={() => setOpenAccess(!openAccess)} className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 cursor-pointer ${openAccess ? 'bg-teal-600' : 'bg-gray-300'}`}>
                       <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform duration-200 ${openAccess ? 'translate-x-5' : 'translate-x-0'}`} />
                     </button>
                   </div>
@@ -186,7 +189,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
               </div>
               <div className="flex items-center gap-3">
                 {uncheckedSourcesCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 text-[11px] font-bold flex items-center justify-center">
                     {uncheckedSourcesCount}
                   </span>
                 )}
@@ -202,7 +205,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                     type="checkbox" 
                     checked={useOpenAlex} 
                     onChange={(e) => setUseOpenAlex(e.target.checked)} 
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer"
                   />
                 </label>
                 <label className="flex items-center justify-between cursor-pointer group">
@@ -211,7 +214,16 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                     type="checkbox" 
                     checked={useSemanticScholar} 
                     onChange={(e) => setUseSemanticScholar(e.target.checked)} 
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer"
+                  />
+                </label>
+                <label className="flex items-center justify-between cursor-pointer group">
+                  <span className="text-[14px] text-gray-700 group-hover:text-gray-900 font-medium">Crossref</span>
+                  <input 
+                    type="checkbox" 
+                    checked={useCrossref} 
+                    onChange={(e) => setUseCrossref(e.target.checked)} 
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer"
                   />
                 </label>
                 <label className="flex items-center justify-between cursor-pointer group">
@@ -220,7 +232,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
                     type="checkbox" 
                     checked={useScopus} 
                     onChange={(e) => setUseScopus(e.target.checked)} 
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500 cursor-pointer"
                   />
                 </label>
               </div>
@@ -230,7 +242,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ isOpen, onClose, o
         </div>
 
         <div className="p-5 border-t border-gray-200 bg-white flex gap-3 shrink-0">
-          <button onClick={handleApply} className="flex-1 bg-[#3b82f6] hover:bg-blue-600 text-white font-bold text-[15px] h-12 rounded-xl transition-colors cursor-pointer">
+          <button onClick={handleApply} className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold text-[15px] h-12 rounded-xl transition-colors cursor-pointer">
             Apply {activeFiltersCount > 0 ? `${activeFiltersCount} filter${activeFiltersCount > 1 ? 's' : ''}` : ''}
           </button>
           <button onClick={handleReset} className="px-6 border border-gray-300 hover:bg-gray-50 text-gray-900 font-bold text-[15px] h-12 rounded-xl transition-colors cursor-pointer">

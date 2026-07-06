@@ -159,6 +159,9 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
     if (!params.sources || params.sources.includes("semanticscholar")) {
       sources.push(semanticscholar(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
+    if (!params.sources || params.sources.includes("crossref")) {
+      sources.push(crossref(apiQueryEn, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
     if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       // Correct boolean format for Scopus
       const scopusQueryEn = intent.enConcepts && intent.enConcepts.length > 0
@@ -175,6 +178,9 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
     }
     if (!params.sources || params.sources.includes("semanticscholar")) {
       sources.push(semanticscholar(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
+    }
+    if (!params.sources || params.sources.includes("crossref")) {
+      sources.push(crossref(apiQueryId, params.yearFrom, params.yearTo, params.minCited, params.limit));
     }
     if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       // Correct boolean format for Scopus
@@ -193,6 +199,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   if (apiQueryEn.length > 3) {
     if (!params.sources || params.sources.includes("openalex")) sourceNames.push("OpenAlex (En)");
     if (!params.sources || params.sources.includes("semanticscholar")) sourceNames.push("SemanticScholar (En)");
+    if (!params.sources || params.sources.includes("crossref")) sourceNames.push("Crossref (En)");
     if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       sourceNames.push("Scopus (En)");
     }
@@ -200,6 +207,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   if (apiQueryId.length > 3) {
     if (!params.sources || params.sources.includes("openalex")) sourceNames.push("OpenAlex (Id)");
     if (!params.sources || params.sources.includes("semanticscholar")) sourceNames.push("SemanticScholar (Id)");
+    if (!params.sources || params.sources.includes("crossref")) sourceNames.push("Crossref (Id)");
     if ((!params.sources && params.scopus) || (params.sources && params.sources.includes("scopus"))) {
       sourceNames.push("Scopus (Id)");
     }
@@ -287,9 +295,8 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
     papers = [...rerankedPapers, ...remainingPapers];
   }
 
-  // Keep a larger list of papers (up to 120) so the client can filter them by source
-  // without losing the papers that didn't make the top 20 list.
-  const finalLimit = params.limit ? Math.max(params.limit, 120) : 120;
+  // Respect user's limit preference, but allow client-side filtering up to a reasonable max
+  const finalLimit = params.limit || 20;
   if (papers.length > finalLimit) {
     papers = papers.slice(0, finalLimit);
   }

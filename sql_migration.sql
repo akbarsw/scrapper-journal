@@ -16,17 +16,7 @@ create table if not exists public.saved_papers (
 );
 
 -- 2. Table: SavedPapers (legacy case-sensitive - fallback)
-create table if not exists public."SavedPapers" (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users not null,
-  paper_id text not null,
-  title text not null,
-  abstract text,
-  url text,
-  notes text,
-  tags text[],
-  created_at timestamp with time zone default now() not null
-);
+-- NOTE: Legacy table kept for migration safety. Use saved_papers (lowercase) going forward.
 
 -- 3. Table: search_history
 create table if not exists public.search_history (
@@ -50,7 +40,15 @@ create table if not exists public.search_history (
 create table if not exists public.rate_limits (
   ip text primary key,
   count integer default 0,
-  last_request timestamp with time zone default now() not null
+  window_start timestamp with time zone default now() not null
+);
+
+-- 4b. Table: search_cache
+create table if not exists public.search_cache (
+  query_hash text primary key,
+  results jsonb not null,
+  ttl_minutes integer default 60,
+  created_at timestamp with time zone default now() not null
 );
 
 -- 5. Table: paper_feedback
@@ -110,14 +108,7 @@ create policy "Users can view own saved papers" on public.saved_papers for selec
 create policy "Users can insert own saved papers" on public.saved_papers for insert with check (auth.uid() = user_id);
 create policy "Users can delete own saved papers" on public.saved_papers for delete using (auth.uid() = user_id);
 
--- Policies: SavedPapers (legacy capitalized)
-drop policy if exists "Enable read access for own user" on public."SavedPapers";
-drop policy if exists "Enable insert access for own user" on public."SavedPapers";
-drop policy if exists "Enable delete access for own user" on public."SavedPapers";
-
-create policy "Enable read access for own user" on public."SavedPapers" for select using (auth.uid() = user_id);
-create policy "Enable insert access for own user" on public."SavedPapers" for insert with check (auth.uid() = user_id);
-create policy "Enable delete access for own user" on public."SavedPapers" for delete using (auth.uid() = user_id);
+-- Policies: SavedPapers (legacy — deprecated, use saved_papers)
 
 -- Policies: search_history
 drop policy if exists "Users can read own search history" on public.search_history;

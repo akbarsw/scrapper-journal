@@ -3,11 +3,7 @@
 import type { Paper, SourceResult } from "./types";
 
 const BASE = "https://api.elsevier.com/content/search/scopus";
-const API_KEY_ENV = process.env.SCOPUS_API_KEY;
-if (!API_KEY_ENV) {
-  throw new Error("SCOPUS_API_KEY tidak diset di environment variables.");
-}
-const API_KEY: string = API_KEY_ENV;
+const API_KEY: string | undefined = process.env.SCOPUS_API_KEY;
 
 export async function search(
   query: string,
@@ -16,6 +12,10 @@ export async function search(
   minCited?: number,
   limit: number = 20
 ): Promise<SourceResult> {
+  if (!API_KEY) {
+    return { papers: [], total: 0, error: "SCOPUS_API_KEY not configured" };
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
 

@@ -51,10 +51,10 @@ export default function EmailAuth() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 z-1">
-      <div className="w-full max-w-sm bg-gradient-to-b from-sky-50/50 to-white rounded-3xl shadow-xl shadow-gray-200/50 p-8 flex flex-col items-center border border-blue-100 text-black">
+      <div className="w-full max-w-sm bg-gradient-to-b from-teal-50/50 to-white rounded-3xl shadow-xl shadow-gray-200/50 p-8 flex flex-col items-center border border-teal-100 text-black">
         
         <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white mb-6 shadow-lg shadow-opacity-5">
-          <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-7 h-7 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
@@ -64,7 +64,7 @@ export default function EmailAuth() {
         </h2>
         <p className="text-gray-500 text-sm mb-6 text-center px-2">
           {isLogin 
-            ? "Sign in to access your ScrapJurnal workspace." 
+            ? "Sign in to access your Nemu Jurnal workspace." 
             : "Sign up to start searching academic papers."}
         </p>
 
@@ -75,7 +75,7 @@ export default function EmailAuth() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-gray-50 text-black text-sm transition"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-200 bg-gray-50 text-black text-sm transition"
           />
           <input
             type="password"
@@ -84,7 +84,7 @@ export default function EmailAuth() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-gray-50 text-black text-sm transition"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-200 bg-gray-50 text-black text-sm transition"
           />
 
           {message.text && (
@@ -96,7 +96,7 @@ export default function EmailAuth() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white font-medium py-3 rounded-xl shadow-sm hover:bg-blue-700 cursor-pointer transition duration-200 disabled:opacity-50 mt-2"
+            className="w-full bg-teal-600 text-white font-medium py-3 rounded-xl shadow-sm hover:bg-teal-700 cursor-pointer transition duration-200 disabled:opacity-50 mt-2"
           >
             {loading ? "Processing..." : (isLogin ? "Sign In" : "Sign Up")}
           </button>
@@ -106,7 +106,7 @@ export default function EmailAuth() {
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button 
             onClick={() => { setIsLogin(!isLogin); setMessage({text:"", type:""}); }}
-            className="text-blue-600 hover:underline font-semibold"
+            className="text-teal-600 hover:underline font-semibold"
           >
             {isLogin ? "Sign Up" : "Sign In"}
           </button>

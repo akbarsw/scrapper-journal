@@ -27,7 +27,8 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
     const [yearTo, setYearTo] = useState<number | "">("");
     const [limit, setLimit] = useState<number>(10);
     const [lang, setLang] = useState<string>("both");
-    const [sources, setSources] = useState<string[]>(['openalex', 'semanticscholar', 'scopus']);
+    const [sources, setSources] = useState<string[]>(['openalex', 'semanticscholar', 'crossref', 'scopus']);
+    const [openAccess, setOpenAccess] = useState(false);
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,7 +49,8 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
             minCited: 0,
             lang: lang,
             exclude: [],
-            sources: sources
+            sources: sources,
+            openAccess: openAccess
         });
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
     };
@@ -73,7 +75,8 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     setYearTo(filters.yearTo || "");
                     setLimit(filters.limit);
                     setLang(filters.lang);
-                    setSources(filters.sources || ['openalex', 'semanticscholar', 'scopus']);
+                    setSources(filters.sources || ['openalex', 'semanticscholar', 'crossref', 'scopus']);
+                    setOpenAccess(filters.openAccess || false);
                 }}
             />
 
@@ -107,7 +110,7 @@ export const ConsensusSearchInput: React.FC<ConsensusSearchInputProps> = ({ onSe
                     <button
                         onClick={handleSend}
                         disabled={!hasContent || isLoading}
-                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer ${hasContent && !isLoading ? 'bg-[#3b82f6] text-white hover:bg-blue-600 shadow-sm' : 'bg-[#e0e7ff] text-[#93c5fd] cursor-not-allowed'}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 cursor-pointer ${hasContent && !isLoading ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm' : 'bg-teal-50 text-teal-300 cursor-not-allowed'}`}
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" strokeWidth={2.5} />}
                     </button>

@@ -48,7 +48,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadLocalData: async () => {
     try {
-      const hist = localStorage.getItem('referensia_history')
+      const hist = localStorage.getItem('nemu_jurnal_history')
       if (hist) set({ history: JSON.parse(hist) })
       
       const { data: { session } } = await supabase.auth.getSession()
@@ -81,7 +81,7 @@ export const useAppStore = create<AppState>((set, get) => ({
            return state;
         }
         const updated = [newEntry, ...state.history].slice(0, 20) // Keep last 20
-        localStorage.setItem('referensia_history', JSON.stringify(updated))
+        localStorage.setItem('nemu_jurnal_history', JSON.stringify(updated))
         return { history: updated }
       })
     } catch (e) {
