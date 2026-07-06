@@ -46,7 +46,38 @@ export async function POST(request: Request) {
           });
         }
       }
-      return Response.json({ ...(cached as any), cached: true, limit: params.limit, feedbacks });
+      
+      const cachedPapers = (cached as any).papers || [];
+      const paperDois = cachedPapers.map((p: any, i: number) => p.doi || `local_${i}`).filter(Boolean);
+      let globalVotes: Record<string, { up: number, down: number }> = {};
+      if (paperDois.length > 0) {
+        const { data: voteData } = await supabase
+          .from("paper_feedback")
+          .select("paper_doi, feedback")
+          .in("paper_doi", paperDois)
+          .in("feedback", ["up", "down"]);
+        if (voteData) {
+          paperDois.forEach((doi: string) => {
+            globalVotes[doi] = { up: 0, down: 0 };
+          });
+          voteData.forEach(row => {
+            if (row.paper_doi && row.feedback) {
+              if (!globalVotes[row.paper_doi]) {
+                globalVotes[row.paper_doi] = { up: 0, down: 0 };
+              }
+              if (row.feedback === "up") globalVotes[row.paper_doi].up++;
+              if (row.feedback === "down") globalVotes[row.paper_doi].down++;
+            }
+          });
+        }
+      }
+      return Response.json({ 
+        ...(cached as any), 
+        cached: true, 
+        limit: params.limit, 
+        feedbacks,
+        globalVotes 
+      });
     }
 
     // Extract authorization user ID
@@ -64,10 +95,37 @@ export async function POST(request: Request) {
     // Save to cache (60 min TTL)
     await setCache(cacheKey, result, 60);
 
+    // Fetch global votes for fresh results
+    const freshPapers = result.papers || [];
+    const paperDois = freshPapers.map((p, i) => p.doi || `local_${i}`).filter(Boolean);
+    let globalVotes: Record<string, { up: number, down: number }> = {};
+    if (paperDois.length > 0) {
+      const { data: voteData } = await supabase
+        .from("paper_feedback")
+        .select("paper_doi, feedback")
+        .in("paper_doi", paperDois)
+        .in("feedback", ["up", "down"]);
+      if (voteData) {
+        paperDois.forEach((doi: string) => {
+          globalVotes[doi] = { up: 0, down: 0 };
+        });
+        voteData.forEach(row => {
+          if (row.paper_doi && row.feedback) {
+            if (!globalVotes[row.paper_doi]) {
+              globalVotes[row.paper_doi] = { up: 0, down: 0 };
+            }
+            if (row.feedback === "up") globalVotes[row.paper_doi].up++;
+            if (row.feedback === "down") globalVotes[row.paper_doi].down++;
+          }
+        });
+      }
+    }
+
     // DEBUG: Inject llm_query ke balikan JSON biar user bisa lihat di inspector jaringan
     const debugResult = { 
       ...result, 
       limit: params.limit,
+      globalVotes,
       llm_query_used: (result as any).llmQuery || "kosong/fallback" 
     };
     

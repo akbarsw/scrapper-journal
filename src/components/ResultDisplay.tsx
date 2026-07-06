@@ -30,6 +30,7 @@ interface Props {
     limit?: number;
     searchId?: string;
     feedbacks?: Record<string, "up" | "down">;
+    globalVotes?: Record<string, { up: number; down: number }>;
   };
 }
 
@@ -38,12 +39,14 @@ function ResultCard({
   paper, 
   searchId, 
   fallbackId,
-  feedbacks 
+  feedbacks,
+  globalVotes
 }: { 
   paper: any; 
   searchId?: string; 
   fallbackId: string;
   feedbacks?: Record<string, "up" | "down">;
+  globalVotes?: Record<string, { up: number; down: number }>;
 }) {
   const [showAbstract, setShowAbstract] = useState(false);
   
@@ -54,6 +57,22 @@ function ResultCard({
   const storeVote = votes[`${searchId}_${paperKey}`];
   const dbVote = feedbacks?.[paperKey];
   const vote = storeVote !== undefined ? storeVote : (dbVote || null);
+  
+  const dbUp = globalVotes?.[paperKey]?.up || 0;
+  const dbDown = globalVotes?.[paperKey]?.down || 0;
+  const userDbVote = dbVote || null;
+  
+  let displayUp = dbUp;
+  let displayDown = dbDown;
+  
+  if (vote !== userDbVote) {
+    if (vote === 'up') displayUp = dbUp + (userDbVote === 'up' ? 0 : 1);
+    else if (userDbVote === 'up') displayUp = dbUp - 1;
+    
+    if (vote === 'down') displayDown = dbDown + (userDbVote === 'down' ? 0 : 1);
+    else if (userDbVote === 'down') displayDown = dbDown - 1;
+  }
+
   const { savedPapers, savePaper, removePaper } = useAppStore();
   const isSaved = savedPapers.some(p => p.paper_id === (paper.id || paper.doi));
 
@@ -175,28 +194,30 @@ function ResultCard({
               <button 
                 onClick={() => handleFeedback("up")} 
                 title="Bermanfaat"
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
                   vote === "up" 
-                    ? "bg-green-50 text-green-600 border border-green-200" 
+                    ? "bg-green-50 text-green-600 border border-green-200 animate-pulse" 
                     : "hover:bg-gray-50 text-gray-400 hover:text-gray-600"
                 }`}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
                 </svg>
+                {displayUp > 0 && <span className="text-[11px] font-bold">{displayUp}</span>}
               </button>
               <button 
                 onClick={() => handleFeedback("down")} 
                 title="Kurang relevan"
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center ${
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1 ${
                   vote === "down" 
-                    ? "bg-red-50 text-red-500 border border-red-200" 
+                    ? "bg-red-50 text-red-500 border border-red-200 animate-pulse" 
                     : "hover:bg-gray-50 text-gray-400 hover:text-red-400"
                 }`}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm8-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
                 </svg>
+                {displayDown > 0 && <span className="text-[11px] font-bold">{displayDown}</span>}
               </button>
             </div>
           )}
@@ -310,6 +331,7 @@ export default function ResultDisplay({ data }: Props) {
                 searchId={data.searchId} 
                 fallbackId={fallbackId} 
                 feedbacks={data.feedbacks}
+                globalVotes={data.globalVotes}
               />
             );
           })
