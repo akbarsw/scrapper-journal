@@ -17,7 +17,7 @@ The codebase follows the Next.js App Router structure under the `src` directory:
 │   │   │   └── scrape/           # /api/scrape - real-time academic paper scraping & scoring
 │   │   ├── login/                # Login & Auth page
 │   │   ├── globals.css           # Styling
-│   │   ├── layout.tsx            # HTML Root layout
+│   │   ├── layout.tsx           # HTML Root layout
 │   │   └── page.tsx              # Main dashboard UI
 │   ├── components/               # Reusable React components
 │   │   ├── History.tsx           # Displays search history panel
@@ -87,9 +87,10 @@ The scoring engine (`src/sources/engine.ts`) calculates a composite `_relevanceS
 $$\text{Score} = (\text{Lexical Score} \times 0.4) + (\text{Citation Score} \times 0.2) + (\text{Recency Score} \times 0.3) + (\text{AI Verified Score} \times 0.1)$$
 
 ### A. Lexical Score (Max 20 Points)
-Calculates raw keyword density matching on the title and abstract. For each term in the query:
+Calculates raw keyword density matching on the title and abstract. Title weight is **4x** heavier than abstract:
 *   `+4` points per term match in the **Title**.
-*   `+2` points per term match in the **Abstract**.
+*   `+1` point per term match in the **Abstract**.
+*   Additional points based on term frequency.
 
 ### B. Citation Score (Max 10 Points)
 Measures scientific impact based on total citations.
@@ -102,11 +103,11 @@ Rewards fresh research based on publication year.
 *   `1` point if published within the last 10 years.
 *   `0` points if older than 10 years.
 
-### D. AI Verified Score (Bonus 10 Points)
-The LLM reranker evaluates candidate abstracts for semantic alignment with the search theme. If the LLM verifies the relevance, the paper receives a **+10** point boost and displays the `AI Verified` badge.
+### D. AI Verified Score (Bonus 8 Points)
+The LLM reranker evaluates candidate abstracts for semantic alignment with the search theme. If the LLM verifies the relevance, the paper receives a **+8** point boost and displays the `AI Verified` badge.
 
 ### E. Hard Cutoff Filter
-To remove noisy out-of-topic search items, any paper with a composite relevance score of **less than 5** is discarded from the results list.
+To remove noisy out-of-topic search items, any paper with a composite relevance score of **less than 8** is discarded from the results list.
 
 ---
 

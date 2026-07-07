@@ -25,11 +25,17 @@ export async function POST(req: Request) {
 
     const { error } = await supabase
       .from("paper_feedback")
-      .update({ feedback })
-      .match({ search_id: searchId, paper_doi: paperDoi });
+      .upsert(
+        {
+          search_id: searchId,
+          paper_doi: paperDoi,
+          feedback,
+        },
+        { onConflict: "search_id,paper_doi" }
+      );
 
     if (error) {
-      console.error("Supabase feedback update error:", error.message);
+      console.error("Supabase feedback upsert error:", error.message);
       return Response.json(
         { success: false, error: error.message, statusCode: 500 },
         { status: 500 }
