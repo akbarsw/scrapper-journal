@@ -444,7 +444,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
 
       await saveFeedbackSnapshots(feedbackRows);
     // Save to cache
-    setCache(cacheHash, { papers, total: papers.length, sources: sourceMeta, llmQuery: `${apiQueryEn} | ${apiQueryId}`, broadened, searchId }, 60);
+    setCache(cacheHash, { papers, total: papers.length, sources: sourceMeta, llmQuery: `${apiQueryEn} | ${apiQueryId}`, broadened, searchId }, 10080);
     }
   } catch (historyErr) {
     console.error("Error saving search history and snapshots:", historyErr);
