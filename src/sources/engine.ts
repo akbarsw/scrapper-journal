@@ -6,7 +6,7 @@ import { search as crossref } from "./crossref";
 import { search as scopus } from "./scopus";
 import { generateKeywords, ExtractedIntent, rerankPapers } from "./llm";
 import { WEIGHTS } from "@/lib/scoring-weights";
-import { saveHistory, saveFeedbackSnapshots } from "@/lib/supabase";
+import { saveHistory, saveFeedbackSnapshots, getCached, setCache, makeCacheHash } from "@/lib/supabase";
 
 export interface SearchParams {
   vars: string;
@@ -173,6 +173,31 @@ export interface SearchResult {
 
 export async function searchAll(params: SearchParams, userId?: string): Promise<SearchResult & { searchId?: string; limit?: number }> {
   const start = Date.now();
+
+  // CACHING
+  const cacheHash = makeCacheHash({
+    vars: params.vars,
+    yearFrom: params.yearFrom,
+    yearTo: params.yearTo,
+    minCited: params.minCited,
+    lang: params.lang,
+    exclude: params.exclude,
+  });
+
+  const cached = await getCached(cacheHash);
+  if (cached) {
+    return {
+      papers: cached.papers,
+      total: cached.total,
+      sources: cached.sources,
+      time: Date.now() - start,
+      llmQuery: cached.llmQuery,
+      broadened: cached.broadened,
+      searchId: cached.searchId,
+      limit: params.limit,
+    };
+  }
+
 
   // Tembak LLM 9Router buat dapet Intent JSON
   const intent = await generateKeywords(params.vars);
@@ -418,6 +443,8 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
       });
 
       await saveFeedbackSnapshots(feedbackRows);
+    // Save to cache
+    setCache(cacheHash, { papers, total: papers.length, sources: sourceMeta, llmQuery: `${apiQueryEn} | ${apiQueryId}`, broadened, searchId }, 60);
     }
   } catch (historyErr) {
     console.error("Error saving search history and snapshots:", historyErr);
