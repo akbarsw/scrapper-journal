@@ -297,7 +297,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
 
   // SEMANTIC RERANKING (Panggil Gemini buat ngebuang jurnal nyasar)
   // Biar gak timeout, kita kirim maksimal 15 teratas hasil lexical ke LLM
-  const candidatesForRerank = papers.slice(0, 25).map((p, i) => ({
+  const candidatesForRerank = papers.slice(0, 40).map((p, i) => ({
     id: p.doi || `local_${i}`, // Pake DOI or ID palsu kalo gada DOI
     title: p.title,
     abstract: (p.abstract || "").slice(0, 500)
@@ -308,7 +308,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
   // Terapkan hasil reranking
   if (rerankedIds.length > 0) {
     const rerankedPapers = [];
-    const remainingPapers = [...papers.slice(25)]; // Sisa yang gak masuk LLM
+    const remainingPapers = [...papers.slice(40)]; // Sisa yang gak masuk LLM
 
     // Susun 25 teratas sesuai urutan JSON keluaran Gemini
     for (const id of rerankedIds) {

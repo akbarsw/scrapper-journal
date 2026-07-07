@@ -3,5 +3,5 @@ export const WEIGHTS = {
   citation: 2.0,
   recency: 3.0,
   aiVerifiedBonus: 8.0,
-  minRelevanceScore: 8.0,
+  minRelevanceScore: 7.0,
 };
