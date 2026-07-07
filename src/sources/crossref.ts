@@ -18,7 +18,7 @@ export async function search(
   try {
     const params = new URLSearchParams({
       query,
-      rows: String(Math.min(limit, 50)),
+      rows: String(Math.min(limit * 4, 100)),
       sort: "relevance",
       order: "desc",
       mailto: MAILTO,

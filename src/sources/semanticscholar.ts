@@ -22,7 +22,7 @@ export async function search(
     const fields = "title,authors,year,journal,externalIds,citationCount,abstract,url";
     const params = new URLSearchParams({
       query,
-      limit: String(Math.min(limit, 30)),
+      limit: String(Math.min(limit * 2, 50)),
       fields,
       sort: "citationCount:desc",
     });

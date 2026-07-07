@@ -34,7 +34,7 @@ export async function search(
 
     const params = new URLSearchParams({
       search: query,
-      per_page: String(Math.min(limit * 2, 50)),
+      per_page: String(Math.min(limit * 4, 100)),
       mailto: EMAIL,
     });
     // Add API key if available to avoid rate limiting

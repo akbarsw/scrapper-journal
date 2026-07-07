@@ -168,6 +168,7 @@ export interface SearchResult {
   sources: { name: string; count: number; error?: string }[];
   time: number;
   llmQuery?: string;
+  broadened?: "concept" | "year" | null;
 }
 
 export async function searchAll(params: SearchParams, userId?: string): Promise<SearchResult & { searchId?: string; limit?: number }> {
@@ -286,6 +287,46 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
 
   // Filter out papers with score less than minRelevanceScore
   papers = papers.filter(p => ((p as any)._relevanceScore || 0) >= WEIGHTS.minRelevanceScore);
+  // Filter out papers with score less than minRelevanceScore
+  papers = papers.filter(p => ((p as any)._relevanceScore || 0) >= WEIGHTS.minRelevanceScore);
+
+  // QUERY BROADENING: kalau hasil terlalu sedikit (<5), longgarkan bertahap
+  // Tahap 1: buang 1 concept paling tidak spesifik
+  // Tahap 2: kalau masih kurang, perlebar yearFrom -5 tahun
+  // Tidak nembak API baru, hanya re-filter dari allPapers yang sudah ada
+  let broadened: "concept" | "year" | null = null;
+  const MIN_RESULTS_BEFORE_BROADEN = 5;
+
+  if (papers.length < MIN_RESULTS_BEFORE_BROADEN) {
+    const relaxedIntent: ExtractedIntent = {
+      ...intent,
+      enConcepts: (intent.enConcepts || []).slice(0, -1),
+      idConcepts: (intent.idConcepts || []).slice(0, -1),
+    };
+
+    if ((relaxedIntent.enConcepts?.length || 0) > 0 || (relaxedIntent.idConcepts?.length || 0) > 0) {
+      let retried = applyFiltersAndScore(dedup(allPapers), params, relaxedIntent);
+      retried = retried.filter(p => ((p as any)._relevanceScore || 0) >= WEIGHTS.minRelevanceScore);
+
+      if (retried.length > papers.length) {
+        papers = retried;
+        broadened = "concept";
+      }
+    }
+  }
+
+  // Tahap 2: perlebar tahun kalau masih kurang
+  if (papers.length < MIN_RESULTS_BEFORE_BROADEN && params.yearFrom) {
+    const relaxedParams: SearchParams = { ...params, yearFrom: params.yearFrom - 5 };
+    let retried = applyFiltersAndScore(dedup(allPapers), relaxedParams, intent);
+    retried = retried.filter(p => ((p as any)._relevanceScore || 0) >= WEIGHTS.minRelevanceScore);
+
+    if (retried.length > papers.length) {
+      papers = retried;
+      broadened = "year";
+    }
+  }
+
 
   // Sort by BM25 Lexical Score first to get the initial top candidates
   papers.sort((a, b) => {
@@ -388,6 +429,7 @@ export async function searchAll(params: SearchParams, userId?: string): Promise<
     sources: sourceMeta,
     time: Date.now() - start,
     llmQuery: `${apiQueryEn} | ${apiQueryId}`,
+    broadened,
     searchId,
     limit: params.limit,
   };
